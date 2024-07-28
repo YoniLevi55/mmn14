@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "file_handler.h"
-#include "labels.h"
 #include "macro_processor.h"
 #include "assembler.h"
 #include <stdbool.h>
@@ -25,6 +24,7 @@ int main(int argc, char *argv[])
         printf("Pre Processing file: %s\n", filename);
         // 1. preprocess file
         preProcessFile(filename);
+        firstPass(filename);
         // 2. first pass
         // 3. second pass
         // 4. output files

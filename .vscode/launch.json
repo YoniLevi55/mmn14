@@ -6,7 +6,7 @@
       "type": "lldb",
       "request": "launch",
       "program": "${workspaceFolder}/a.out",
-      "args": [],
+      "args": ["in"],
       "cwd": "${workspaceFolder}",
       "stopOnEntry": false,
       "preLaunchTask": "build all",
@@ -15,7 +15,7 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "lldb",
       "request": "launch",
-      "args": ["in.as", "out.as"],
+      "args": ["in"],
       "cwd": "/Users/sasilevi/git/mmn14-compiler",
       "program": "${workspaceFolder}/a.out"
     }

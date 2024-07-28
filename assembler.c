@@ -58,14 +58,17 @@ bool isInTable(char* label)
 
 
 
-void firstPass(FILE *inFile, FILE *outFile)
+void firstPass(char *inFile)
 {
     char *line;
     int labelCount = 0;
     bool labelFound = false;
     int labelOffSet = 0;
     int errorCount = 0;
-    while ((line = ReadLine(inFile)) != NULL)
+    char *fileName = malloc(strlen(inFile) + 3);
+    sprintf(fileName, "%s.am", inFile);
+    FILE *file = OpenFile(fileName, "r");
+    while ((line = ReadLine(file)) != NULL)
     {
         char* trimmedLine = trimWhiteSpace(line);
         if (trimmedLine[0] == '\n' || trimmedLine[0] == ';') //checks if the line is empty or a comment.

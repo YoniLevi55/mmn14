@@ -1,3 +1,4 @@
 *.as
 *.am
 *.ob
+a.out.dSYM

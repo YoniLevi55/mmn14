@@ -17,3 +17,4 @@ typedef struct
 Label** symbolTable;
 
 int isLabel(char* line);
+void firstPass(char *inFile);
