@@ -16,6 +16,6 @@ typedef struct
 
 Macro** macros;
 
-void processFile(char* inputFile, char* outputFile);
+void preProcessFile(char* inputFile);
 Macro* macroExists(char* line);
 bool isMacro(char* line);

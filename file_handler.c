@@ -19,10 +19,5 @@ char* ReadLine(FILE *file){
         free(line);
         return NULL;
     }
-    // TODO: Implement the following:
-    // check if line is comment
-    // check if line is empty
-    // remove comments
-    // trim white space
     return line;
 }

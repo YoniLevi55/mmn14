@@ -4,16 +4,10 @@
 #include <string.h>
 #include "macro_processor.h"
 #include <stdbool.h>
+#include "string_helper.h"
+
 
 int macroCount = 0;
-
-char* trimWhiteSpace(char* line) //trimming white space from the beginning of the line.
-{
-    int i = 0;
-    while (line[i] == ' ' || line[i] == '\t')
-        i++;
-    return line + i;
-}
 
 bool isMacro(char* line) //checking if the line is a macro.
 {
@@ -30,10 +24,14 @@ Macro* macroExists(char* line) //checking if the macro exists already in the mac
     return NULL; //returning NULL if the macro does not exist.
 }
 
-void processFile(char* inputFile, char* outputFile) //processing the initial input file.
+void preProcessFile(char* inputFile) //processing the initial input file.
 {
     bool macroFound = false;
-    FILE* inFile = OpenFile(inputFile, "r"); //opening the input file for reading.
+    char *fileName = malloc(strlen(inputFile) + 3);
+    char *outputFile = malloc(strlen(inputFile) + 3);
+    sprintf(outputFile, "%s.am", inputFile);
+    sprintf(fileName, "%s.as", inputFile);
+    FILE* inFile = OpenFile(fileName, "r"); //opening the input file for reading.
     FILE* outFile = OpenFile(outputFile, "w"); //creating the output file for writing.
     char* line;
     int i = 0;

@@ -14,23 +14,21 @@
 
 int main(int argc, char *argv[])
 {
-    int labelCount = 0;
-    Label labels[MAX_LINE_LENGTH];
-    int lineNumber = 0;
-
-    FILE* file = OpenFile("in.as", "r");
-    char *line;
-    while ((line = ReadLine(file)) != NULL) {
-        lineNumber++;
-        printf("%s", line);
-        char label[MAX_LABEL_LENGTH];
-
-        if (isLabel(line, label)) {
-            strcpy(labels[labelCount].label, label);
-            labels[labelCount].lineNumber = lineNumber;
-            labelCount++;
-        }
+    if (argc <= 1)
+    {
+        printf("Usage: %s <filename>\n", argv[0]);
+        return 1;
     }
-    processFile("in.as", "out.as");
+    for (int i = 1; i < argc; i++)
+    {
+        char *filename = argv[i];
+        printf("Pre Processing file: %s\n", filename);
+        // 1. preprocess file
+        preProcessFile(filename);
+        // 2. first pass
+        // 3. second pass
+        // 4. output files
+
+    }
     return 0;
 }
