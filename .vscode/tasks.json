@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0",
+    "tasks": [{
+        "label": "build all",
+        "type": "shell",
+        "command": "gcc",
+        "args": [
+            "-g", // Generate debug information
+            "*.c", // Compile all C files in the directory
+        ],
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        },
+        "problemMatcher": ["$gcc"],
+        "detail": "Generated task by VSCode"
+    }]
+}

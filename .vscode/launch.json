@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Program with LLDB",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/a.out",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopOnEntry": false,
+      "preLaunchTask": "build all",
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": ["in.as", "out.as"],
+      "cwd": "/Users/sasilevi/git/mmn14-compiler",
+      "program": "${workspaceFolder}/a.out"
+    }
+  ]
+}
