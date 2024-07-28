@@ -8,24 +8,13 @@
 #include "string_helper.h"
 
 int IC = 0, DC = 0;
-
-int findFirstColon(char *line)
-{
-    char *pos = strchr(line, ':');
-    if (pos)
-    {
-        return pos - line;
-    }
-    else
-    {
-        return -1;
-    }
-}
+int dataSegment[4096];
 
 int isLabel(char *line)
 {
-    int colonPos = findFirstColon(line);
-    bool validLabel = colonPos > 1 && ((line[0] > 64 && line[0] < 91) || (line[0] > 96 && line[0] < 123));
+    char* trimmedLine = trimWhiteSpace(line);
+    int colonPos = findFirstSign(trimmedLine, ':');
+    bool validLabel = colonPos > 1 && ((trimmedLine[0] > 64 && trimmedLine[0] < 91) || (trimmedLine[0] > 96 && trimmedLine[0] < 123));
     if (validLabel) //checks if their is a valid label, checks that first character is a capital letter and that the colon is not the first character.
     {
         return colonPos + 2;
@@ -38,7 +27,7 @@ int isLabel(char *line)
 
 char* getLabel(char* line)
 {
-    int colonPos = findFirstColon(line);
+    int colonPos = findFirstSign(line,':');
     char* label = malloc(colonPos - 1);
     strncpy(label, line, colonPos - 1);
     return label;
@@ -57,7 +46,6 @@ bool isInTable(char* label)
 }
 
 
-
 void firstPass(char *inFile)
 {
     char *line;
@@ -73,13 +61,13 @@ void firstPass(char *inFile)
         char* trimmedLine = trimWhiteSpace(line);
         if (trimmedLine[0] == '\n' || trimmedLine[0] == ';') //checks if the line is empty or a comment.
             continue; //ignores and skips the line if it is empty or a comment.
-        labelOffSet = isLabel(line);
+        labelOffSet = isLabel(trimmedLine);
         if (labelOffSet > 0) //checks if the line is a label.
         {
             labelFound = true;
             labelCount++;
         }
-        if(strncmp(&line[labelOffSet], ".data", 5) == 0 || strncmp(&line[labelOffSet], ".string", 7) == 0)
+        if(strncmp(&trimmedLine[labelOffSet], ".data", 5) == 0 || strncmp(&trimmedLine[labelOffSet], ".string", 7) == 0)
         {
             if(labelFound)
             {
@@ -90,12 +78,13 @@ void firstPass(char *inFile)
                     symbolTable[0]->name = getLabel(line);
                     symbolTable[0]->value = DC;
                     symbolTable[0]->type = ".data";
+                    symbolTable[0]->attribute = "relocatable";
                 }
                 else
                 {
                     if (isInTable(getLabel(line)))
                     {
-                        fprintf(stderr, "Error: Label %s already exists in table.\n", getLabel(line));
+                        fprintf(stderr, "Error: Label %s already exists in table.\n", getLabel(trimmedLine));
                         errorCount++;
                     }
                     else
@@ -105,13 +94,35 @@ void firstPass(char *inFile)
                         symbolTable[labelCount]->name = getLabel(line);
                         symbolTable[labelCount]->value = DC;
                         symbolTable[labelCount]->type = ".data";
+                        symbolTable[0]->attribute = "relocatable";
                     }
                 }
             }
+            if (strncmp(&trimmedLine[labelOffSet], ".data", 5) == 0)
+            {
+                labelOffSet += strlen(".data") + 1;
+                int count = 0;
+                char** data = split_string(&trimmedLine[labelOffSet], ',', &count);
+                for (int i = 0; i < count; i++)
+                {
+                    dataSegment[DC] = atoi(data[i]);
+                    DC++;
+                }
+            }
+            else if (strncmp(&trimmedLine[labelOffSet], ".string", 7) == 0)
+            {
+                labelOffSet += strlen(".string") + 2;
+                for (int i = 0; i < strlen(trimmedLine); i++)
+                {
+                    dataSegment[DC] = trimmedLine[labelOffSet+i];
+                    DC++;
+                }
+                continue;
+            }
         }
-        else if (strncmp(&line[labelOffSet], ".entry", 6) == 0 || strncmp(&line[labelOffSet], ".extern", 7) == 0)
+        else if (strncmp(&trimmedLine[labelOffSet], ".entry", 6) == 0 || strncmp(&line[labelOffSet], ".extern", 7) == 0)
         {
-            if (strncmp(&line[labelOffSet], ".extern", 7) == 0)
+            if (strncmp(&trimmedLine[labelOffSet], ".extern", 7) == 0)
             {
             }
         }

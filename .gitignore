@@ -2,3 +2,4 @@
 *.am
 *.ob
 a.out.dSYM
+a.out.dSYM/** 

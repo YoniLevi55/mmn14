@@ -12,6 +12,7 @@ typedef struct
     char* name;
     int value;
     char* type;
+    char* attribute;
 } Label;
 
 Label** symbolTable;
