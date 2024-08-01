@@ -3,7 +3,7 @@
 #include <string.h>
 #include "file_handler.h"
 #include "macro_processor.h"
-#include "assembler.h"
+#include "FirstPass.h"
 #include <stdbool.h>
 
 // typedef struct {

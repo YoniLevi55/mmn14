@@ -5,14 +5,15 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+
 #define MAX_LABEL_LENGTH 31
+#define NUM_OF_OPCODES 16
 
 typedef struct
 {
     char* name;
     int value;
     char* type;
-    char* attribute;
 } Label;
 
 Label** symbolTable;

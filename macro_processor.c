@@ -26,7 +26,7 @@ Macro* macroExists(char* line) //checking if the macro exists already in the mac
 
 void preProcessFile(char* inputFile) //processing the initial input file.
 {
-    bool macroFound = false;
+    bool macroFound = false; //FLAG!
     char *fileName = malloc(strlen(inputFile) + 3);
     char *outputFile = malloc(strlen(inputFile) + 3);
     sprintf(outputFile, "%s.am", inputFile);
