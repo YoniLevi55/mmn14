@@ -3,8 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include "string_helper.h"
-#include "opcode_coding.c"
 
 bool isDataType(char* line);
 bool isOperation(char* line);
@@ -15,4 +13,7 @@ bool is_number_with_hash(const char* str);
 bool is_operand(const char* str);
 bool is_dereferenced_operand(const char* str);
 void split_args(const char* args, char* argOne, char* argTwo);
+int opcode_coder(char* opcode, char* args);
+int getNumOfArgs(const char* args);
+
 

@@ -10,7 +10,8 @@
 
 int IC = 0, DC = 0;
 int L = 0;
-int dataSegment[4096];
+int *dataSegment = NULL;
+int *codeSegment = NULL;
 char* opcodes[NUM_OF_OPCODES] = {"mov", "cmp", "add", "sub", "lea", "clr", "not", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop"};
 
 int isLabel(char *line)
@@ -46,6 +47,18 @@ bool isInTable(char* label)
         }
     }
     return false;
+}
+
+int getLabelValue(char* label)
+{
+    for (int i = 0; i < sizeof(symbolTable); i++)
+    {
+        if (strcmp(symbolTable[i]->name, label) == 0)
+        {
+            return symbolTable[i]->value;
+        }
+    }
+    return -1;
 }
 
 void breakLine(char* line, char** label, char** operation, char** datatype, char** args) {
@@ -96,14 +109,13 @@ void firstPass(char *inFile)
         if (trimmedLine[0] == '\n' || trimmedLine[0] == ';') //checks if the line is empty or a comment.
             continue; //ignores and skips the line if it is empty or a comment.
 
-        labelOffSet = isLabel(trimmedLine);
         if (label != NULL) //checks if the line is a label.
         {
             labelFound = true;
             labelCount++;
         }
 
-        if ((operation != NULL) && (operation, ".data", 5) == 0) || (strncmp(operation, ".string", 7) == 0)
+        if ((operation != NULL) && ((strncmp(operation, ".data", 5) == 0) || (strncmp(operation, ".string", 7) == 0)))
         {
             if(labelFound)
             {
@@ -119,7 +131,7 @@ void firstPass(char *inFile)
                 {
                     if (isInTable(label))
                     {
-                        fprintf(stderr, "Error: Label %s already exists in table.\n", label);
+                        fprintf(stdout, "Error: Label %s already exists in table.\n", label);
                         errorCount++;
                     }
                     else
@@ -132,22 +144,40 @@ void firstPass(char *inFile)
                     }
                 }
             }
-            if ((operation, ".data", 5) == 0)
+            if (strncmp(operation, ".data", 5) == 0) //data coding into array
             {
                 int count = 0;
-                char** data = split_string(&data, ',', &count);
+                char** data = split_string(args, ',', &count);
                 for (int i = 0; i < count; i++)
                 {
+                    if (dataSegment == NULL)
+                    {
+                        dataSegment = malloc(sizeof(int));
+                    }
+                    else
+                    {
+                        dataSegment = realloc(dataSegment, (DC + 1) * sizeof(int));
+                    }
                     dataSegment[DC] = atoi(data[i]);
                     DC++;
+                    dataSegment = realloc(dataSegment, (DC) * sizeof(int));
                 }
             }
             else if (strncmp(operation, ".string", 7) == 0)
             {
-                for (int i = 0; i < strlen(date); i++)
+                for (int i = 0; i < strlen(args); i++)
                 {
-                    dataSegment[DC] = data[i];
+                    if (dataSegment == NULL)
+                    {
+                        dataSegment = malloc(sizeof(int));
+                    }
+                    else
+                    {
+                        dataSegment = realloc(dataSegment, (DC) * sizeof(int));
+                    }
+                    dataSegment[DC] = args[i];
                     DC++;
+                    dataSegment = realloc(dataSegment, (DC) * sizeof(int));
                 }
                 dataSegment[DC] = 0;
                 DC++;
@@ -159,7 +189,7 @@ void firstPass(char *inFile)
             if (strncmp(operation, ".extern", 7) == 0)
             {
                 int count = 0;
-                char** outLabels = split_string(data, ' ', &count);
+                char** outLabels = split_string(args, ' ', &count);
                 for (int i = 0; i < count; i++)
                 {
                     symbolTable = realloc(symbolTable, sizeof(Label*) * (labelCount + 1));
@@ -174,7 +204,7 @@ void firstPass(char *inFile)
         {
             if(isInTable(label))
             {
-                fprintf(stderr, "Error: Label %s already exists in table.\n", label);
+                fprintf(stdout, "Error: Label %s already exists in table.\n", label);
                 errorCount++;
             }
             else
@@ -187,10 +217,18 @@ void firstPass(char *inFile)
             }
         }
         if (operation == NULL)
-            fprintf(stderr, "Error: Operation name incorrect.\n");
-        int opcodeCode = opcodeCoding(operation, args);
+            fprintf(stdout, "Error: Operation name incorrect.\n");
+        int opcodeCode = opcode_coder(operation, args);
+        if (codeSegment == NULL)
+        {
+            codeSegment = malloc(sizeof(int));
+        } else {
+            codeSegment = realloc(codeSegment, (IC + 1) * sizeof(int));
+        }
+        codeSegment[IC] = opcodeCode;
         L = getNumOfArgs(args);
-        IC += L;
+        IC += L + 1;
+        codeSegment = realloc(&codeSegment, (IC) * sizeof(int));
         continue;
     }
     if (errorCount > 0)

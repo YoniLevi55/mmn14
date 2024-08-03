@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include "string_helper.h"
+#include "FirstPass.h"
 
 bool isDataType(char* line)
 {
@@ -213,4 +214,82 @@ int opcode_coder(char* opcode, char* args)
 
     code |= ABSOLUTE << ARE_OFFSET;
     return code;
+}
+
+void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo)
+{
+    argOne = trimWhiteSpace(argOne);
+    argTwo = trimWhiteSpace(argTwo);
+    if (is_number_with_hash(argOne))
+    {
+        int value = atoi(&argOne[1]);
+        *codeOne = (ABSOLUTE | (value << 3));
+    }
+    else if (isLabel(argOne))
+    {
+        int labelValue = getLabelValue(argOne);
+        codeOne = (RELOCATABLE | (labelValue << 3));
+    }
+    if (is_number_with_hash(argTwo))
+    {
+        int value = atoi(&argTwo[1]);
+        *codeTwo = (ABSOLUTE | (value << 3));
+    }
+    else if (isLabel(argTwo))
+    {
+        int labelValue = getLabelValue(argTwo);
+        CodeTwo = (RELOCATABLE | (labelValue << 3));
+    }
+    if (is_operand(argOne)  && argTwo[0] == '\0')
+    {
+        int value = atoi(&argOne[1]);
+        *codeOne = (ABSOLUTE | (value << 6));
+    }
+    else if (is_operand(argOne) && (is_number_with_hash(argTwo) || isLabel(argTwo)))
+    {
+        int value = atoi(&argOne[1]);
+        *codeOne = (ABSOLUTE | (value << 3));
+    }
+    else if (is_operand(argTwo) && (is_number_with_hash(argOne) || isLabel(argOne)))
+    {
+        int value = atoi(&argTwo[1]);
+        *codeTwo = (ABSOLUTE | (value << 6));
+    }
+    else if (is_dereferenced_operand(argOne) && argTwo[0] == '\0')
+    {
+        int value = atoi(&argOne[2]);
+        *codeOne = (ABSOLUTE | (value << 6));
+    }
+    else if (is_dereferenced_operand(argOne) && (is_number_with_hash(argTwo) || isLabel(argTwo)))
+    {
+        int value = atoi(&argOne[2]);
+        *codeOne = (ABSOLUTE | (value << 3));
+    }
+    else if (is_dereferenced_operand(argTwo) && (is_number_with_hash(argOne) || isLabel(argOne)))
+    {
+        int value = atoi(&argTwo[2]);
+        *codeTwo = (ABSOLUTE | (value << 6));
+    }
+    else if ((is_operand(argOne) || is_dereferenced_operand(argOne)) && (is_operand(argTwo) || is_dereferenced_operand(argTwo)))
+    {
+        int value = 0;
+        int value2  = 0;
+        if (is_operand(argOne))
+        {
+            value = atoi(&argOne[1]);
+        }
+        else if (is_dereferenced_operand(argOne))
+        {
+            value = atoi(&argOne[2]);
+        }
+        if (is_operand(argTwo))
+        {
+            value2 = atoi(&argTwo[1]);
+        }
+        else if (is_dereferenced_operand(argTwo))
+        {
+            value2 = atoi(&argTwo[2]);
+        }
+        *codeOne = (ABSOLUTE | (value << 6) | (value2 << 3));
+    }
 }
