@@ -7,25 +7,31 @@
 #include <ctype.h>
 #include "string_helper.h"
 #include "opcode_coding.h"
+#include "errors_handler.h"
+#include "symbol_table.h"
 
 int IC = 0, DC = 0;
 int L = 0;
+// int labelCount = 0;
+
 int *dataSegment = NULL;
 int *codeSegment = NULL;
-char* opcodes[NUM_OF_OPCODES] = {"mov", "cmp", "add", "sub", "lea", "clr", "not", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop"};
 
-int isLabel(char *line)
+
+// char* opcodes[NUM_OF_OPCODES] = {"mov", "cmp", "add", "sub", "lea", "clr", "not", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop"};
+
+bool isLabel(char *line)
 {
     char* trimmedLine = trimWhiteSpace(line);
     int colonPos = findFirstSign(trimmedLine, ':');
     bool validLabel = colonPos > 1 && ((trimmedLine[0] > 64 && trimmedLine[0] < 91) || (trimmedLine[0] > 96 && trimmedLine[0] < 123));
     if (validLabel) //checks if their is a valid label, checks that first character is a capital letter and that the colon is not the first character.
     {
-        return colonPos + 2;
+        return true;
     }
     else //there is no valid label.
     {
-        return 0;
+        return false;
     }
 }
 
@@ -37,29 +43,7 @@ char* getLabel(char* line)
     return label;
 }
 
-bool isInTable(char* label)
-{
-    for (int i = 0; i < sizeof(symbolTable); i++)
-    {
-        if (strcmp(symbolTable[i]->name, label) == 0)
-        {
-            return true;
-        }
-    }
-    return false;
-}
 
-int getLabelValue(char* label)
-{
-    for (int i = 0; i < sizeof(symbolTable); i++)
-    {
-        if (strcmp(symbolTable[i]->name, label) == 0)
-        {
-            return symbolTable[i]->value;
-        }
-    }
-    return -1;
-}
 
 void breakLine(char* line, char** label, char** operation, char** datatype, char** args) {
     int count;
@@ -92,150 +76,358 @@ void breakLine(char* line, char** label, char** operation, char** datatype, char
     strncpy(*args, &line[offset+1], strlen(line) - offset); //make sure that if data is string, return without quotes.
 }
 
+void removeLastChar(char* str) {
+    int length = strlen(str);
+
+    if (length > 0) {
+        str[length - 1] = '\0';  // Set the last character to null terminator
+    }
+}
+
 void firstPass(char *inFile)
 {
     char *line;
-    int labelCount = 0;
     bool labelFound = false; //FLAG!
-    int errorCount = 0;
     char *fileName = malloc(strlen(inFile) + 3);
     sprintf(fileName, "%s.am", inFile);
     FILE *file = OpenFile(fileName, "r");
-    char *label, *operation, *datatype, *args;
+    char *label = NULL;
+    char *operation = NULL;
+    char *datatype = NULL;
+    char *args = NULL;
+    int lineCount = 0;
     while ((line = ReadLine(file)) != NULL)
     {
+        printf("Processing line %s", line);
+        lineCount++;
         char* trimmedLine = trimWhiteSpace(line);
+        if (strlen(trimmedLine) > MAX_LINE_LENGTH)
+        {
+            set_error(line, "Line is too long");
+        }
         breakLine(trimmedLine, &label, &operation, &datatype, &args);
         if (trimmedLine[0] == '\n' || trimmedLine[0] == ';') //checks if the line is empty or a comment.
             continue; //ignores and skips the line if it is empty or a comment.
-
         if (label != NULL) //checks if the line is a label.
         {
             labelFound = true;
-            labelCount++;
+            removeLastChar(label);
         }
-
-        if ((operation != NULL) && ((strncmp(operation, ".data", 5) == 0) || (strncmp(operation, ".string", 7) == 0)))
+        if (labelFound && is_symbol_exist(label))
         {
-            if(labelFound)
+            set_error(line, "Label already defined");
+        }
+        if (datatype != NULL)
+        {
+            if (labelFound && (strncmp(datatype, ".entry", 5) == 0 || strncmp(datatype, ".extern", 7) == 0))
             {
-                if (labelCount == 0)
-                {
-                    symbolTable = malloc(sizeof(Label*));
-                    symbolTable[0] = malloc(sizeof(Label));
-                    symbolTable[0]->name = label;
-                    symbolTable[0]->value = DC;
-                    symbolTable[0]->type = ".data";
-                }
-                else
-                {
-                    if (isInTable(label))
-                    {
-                        fprintf(stdout, "Error: Label %s already exists in table.\n", label);
-                        errorCount++;
-                    }
-                    else
-                    {
-                        symbolTable = realloc(symbolTable, sizeof(Label*) * (labelCount + 1));
-                        symbolTable[labelCount] = malloc(sizeof(Label));
-                        symbolTable[labelCount]->name = label;
-                        symbolTable[labelCount]->value = DC;
-                        symbolTable[labelCount]->type = ".data";
-                    }
-                }
-            }
-            if (strncmp(operation, ".data", 5) == 0) //data coding into array
-            {
-                int count = 0;
-                char** data = split_string(args, ',', &count);
-                for (int i = 0; i < count; i++)
-                {
-                    if (dataSegment == NULL)
-                    {
-                        dataSegment = malloc(sizeof(int));
-                    }
-                    else
-                    {
-                        dataSegment = realloc(dataSegment, (DC + 1) * sizeof(int));
-                    }
-                    dataSegment[DC] = atoi(data[i]);
-                    DC++;
-                    dataSegment = realloc(dataSegment, (DC) * sizeof(int));
-                }
-            }
-            else if (strncmp(operation, ".string", 7) == 0)
-            {
-                for (int i = 0; i < strlen(args); i++)
-                {
-                    if (dataSegment == NULL)
-                    {
-                        dataSegment = malloc(sizeof(int));
-                    }
-                    else
-                    {
-                        dataSegment = realloc(dataSegment, (DC) * sizeof(int));
-                    }
-                    dataSegment[DC] = args[i];
-                    DC++;
-                    dataSegment = realloc(dataSegment, (DC) * sizeof(int));
-                }
-                dataSegment[DC] = 0;
-                DC++;
+                printf("Warning: Label will be ignored.\n");
                 continue;
             }
-        }
-        else if (strncmp(operation, ".entry", 6) == 0 || strncmp(operation, ".extern", 7) == 0)
-        {
-            if (strncmp(operation, ".extern", 7) == 0)
+
+            if ((datatype != NULL) && ((strncmp(datatype, ".data", 5) == 0) || (strncmp(datatype, ".string", 7) == 0)))
             {
-                int count = 0;
-                char** outLabels = split_string(args, ' ', &count);
-                for (int i = 0; i < count; i++)
+                if(labelFound)
                 {
-                    symbolTable = realloc(symbolTable, sizeof(Label*) * (labelCount + 1));
-                    symbolTable[labelCount] = malloc(sizeof(Label));
-                    symbolTable[labelCount]->name = outLabels[i];
-                    symbolTable[labelCount]->type = ".extern";
+                    if (is_symbol_exist(label))
+                    {
+                        set_error(line, "Label already exists in table.");
+                    }
+                    else
+                    {
+                        add_symbol(label, DC, ".data");
+                    }
                 }
+                if (strncmp(datatype, ".data", 5) == 0) //data coding into array
+                {
+                    int count = 0;
+                    char** data = split_string(args, ',', &count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (dataSegment == NULL)
+                        {
+                            dataSegment = malloc(sizeof(int));
+                        }
+                        else
+                        {
+                            dataSegment = realloc(dataSegment, (DC + 1) * sizeof(int));
+                        }
+                        dataSegment[DC] = atoi(data[i]);
+                        DC++;
+                        dataSegment = realloc(dataSegment, (DC) * sizeof(int));
+                    }
+                }
+                else if (strncmp(datatype, ".string", 7) == 0)
+                {
+                    for (int i = 0; i < strlen(args); i++)
+                    {
+                        if (dataSegment == NULL)
+                        {
+                            dataSegment = malloc(sizeof(int));
+                        }
+                        else
+                        {
+                            dataSegment = realloc(dataSegment, (DC) * sizeof(int));
+                        }
+                        dataSegment[DC] = args[i];
+                        DC++;
+                        dataSegment = realloc(dataSegment, (DC) * sizeof(int));
+                    }
+                    dataSegment[DC] = 0;
+                    DC++;
+                    continue;
+                }
+            }
+            else if (strncmp(datatype, ".entry", 6) == 0 || strncmp(datatype, ".extern", 7) == 0)
+            {
+                if (strncmp(datatype, ".extern", 7) == 0)
+                {
+                    int count = 0;
+                    char** outLabels = split_string(args, ' ', &count);
+                    for (int i = 0; i < count; i++)
+                    {
+                        add_symbol(outLabels[i], 0, ".extern");
+                    }
+                    label = NULL;
+                    operation = NULL;
+                    datatype = NULL;
+                    args = NULL;
+                    continue;
+                }
+                label = NULL;
+                operation = NULL;
+                datatype = NULL;
+                args = NULL;
                 continue;
             }
         }
         if (labelFound)
         {
-            if(isInTable(label))
+            if(is_symbol_exist(label))
             {
-                fprintf(stdout, "Error: Label %s already exists in table.\n", label);
-                errorCount++;
+                set_error(line, "Label already exists in table.");
             }
             else
             {
-                symbolTable = realloc(symbolTable, sizeof(Label*) * (labelCount + 1));
-                symbolTable[labelCount] = malloc(sizeof(Label));
-                symbolTable[labelCount]->name = label;
-                symbolTable[labelCount]->value = IC + 100;
-                symbolTable[labelCount]->type = ".code";
+                add_symbol(label, IC + 100, ".code");
             }
         }
-        if (operation == NULL)
-            fprintf(stdout, "Error: Operation name incorrect.\n");
+
+        if (operation == NULL && datatype == NULL)
+        {
+            set_error(line, "Operation name incorrect.");
+        }
         int opcodeCode = opcode_coder(operation, args);
+        char* argOne = NULL;
+        char* argTwo = NULL;
+        int codeOne = 0;
+        int codeTwo = 0;
+        split_args(args, &argOne, &argTwo);
+        argOne = trimWhiteSpace(argOne);
+        argTwo = trimWhiteSpace(argTwo);
+        if (validator(operation, argOne, argTwo) == false)
+        {
+            set_error(line, "Invalid arguments to opcode name");
+        }
         if (codeSegment == NULL)
         {
-            codeSegment = malloc(sizeof(int));
+            // printf("Allocating memory for codeSegment\n");
+            codeSegment = (int*) malloc(sizeof(int));
         } else {
+            // printf("Reallocating memory for codeSegment\n");
             codeSegment = realloc(codeSegment, (IC + 1) * sizeof(int));
         }
         codeSegment[IC] = opcodeCode;
         L = getNumOfArgs(args);
-        IC += L + 1;
-        codeSegment = realloc(&codeSegment, (IC) * sizeof(int));
-        continue;
+        if (getNumOfArgs(args) == 2 && ((is_operand(argOne)|| is_dereferenced_operand(argOne)) && (is_operand(argTwo) || is_dereferenced_operand(argTwo))))
+        {
+            L = 1;
+        }
+        codeSegment = realloc(codeSegment, (IC + L) * sizeof(int)); //error
+        operandCoder(argOne, argTwo, &codeOne, &codeTwo);
+        int codeCount = 0;
+        if (codeOne != 0)
+        {
+            codeCount++;
+        }
+        if (codeTwo != 0)
+        {
+            codeCount++;
+        }
+        switch (codeCount)
+        {
+            case 0:
+                break;
+            case 1:
+                if (findMethod(argOne) == 2)
+                {
+                    codeSegment[IC + 1] = 0;
+                    break;
+                }
+                codeSegment[IC + 1] = codeOne;
+                break;
+            case 2:
+                if (findMethod(argOne) == 2)
+                {
+                    codeSegment[IC + 2] = codeTwo;
+                    codeSegment[IC + 1] = 0;
+                    break;
+                }
+                else if (findMethod(argTwo) == 2)
+                {
+                    codeSegment[IC + 1] = codeOne;
+                    codeSegment[IC + 2] = 0;
+                    break;
+                }
+                else if (findMethod(argOne) == 2 && findMethod(argTwo) == 2)
+                {
+                    codeSegment[IC + 2] = 0;
+                    codeSegment[IC + 1] = 0;
+                    break;
+                }
+                codeSegment[IC + 2] = codeTwo;
+                codeSegment[IC + 1] = codeOne;
+                break;
+        }
+        IC += L;
+        label = NULL;
+        operation = NULL;
+        datatype = NULL;
+        args = NULL;
+        argOne = NULL;
+        argTwo = NULL;
+        labelFound = false;
     }
-    if (errorCount > 0)
-        exit(EXIT_FAILURE);
-    for (int i = 0; i < sizeof(symbolTable); i++)
+    if (get_error_count() > 0)
     {
-        if (strcmp(symbolTable[i]->type, ".data") == 0)
-            symbolTable[i]->value += IC + 100;
+        exit_with_error(EXIT_FAILURE, "Errors found in file." );
     }
+    set_ic_offset(IC);
+}
+
+void secondPass(char *inFile)
+{
+    IC = 0;
+    char *line;
+    char *fileName = malloc(strlen(inFile) + 3);
+    int count = 0;
+    sprintf(fileName, "%s.am", inFile);
+    FILE *file = OpenFile(fileName, "r");
+    char *label, *operation, *datatype, *args;
+    while ((line = ReadLine(file)) != NULL)
+    {
+        breakLine(line, &label, &operation, &datatype, &args);
+        if ((strncmp(datatype, ".data", 5) == 0) || (strncmp(datatype, ".string", 7) == 0) || (strncmp(datatype, ".extern", 6) == 0))
+        {
+            continue;
+        }
+        if (strncmp(datatype, ".entry", 6) == 0)
+        {
+            char** entries = split_string(args, ' ', &count);
+            for (int i = 0; i < count; i++)
+            {
+                set_type(entries[i], ".entry");
+            }
+            continue;
+        }
+        char* argOne = NULL;
+        char* argTwo = NULL;
+        split_args(args, &argOne, &argTwo);
+        argOne = trimWhiteSpace(argOne);
+        argTwo = trimWhiteSpace(argTwo);
+        L = getNumOfArgs(args);
+        if (getNumOfArgs(args) == 2 && ((is_operand(argOne) || is_operand(argTwo) || is_dereferenced_operand(argOne) || is_dereferenced_operand(argTwo)) || (is_operand(argOne) || is_operand(argTwo) || is_dereferenced_operand(argOne) || is_dereferenced_operand(argTwo))))
+        {
+            L = 1;
+        }
+        if (isLabel(argOne))
+        {
+            codeSegment[IC + 1] = getLabelValue(argOne);
+        }
+        if (isLabel(argTwo))
+        {
+            codeSegment[IC + 2] = getLabelValue(argTwo);
+        }
+        IC += L;
+    }
+    if (get_error_count() > 0)
+        exit_with_error(EXIT_FAILURE, "Errors found!");
+}
+
+int intToOctal(int num) {
+    int octalNum = 0, placeValue = 1;
+
+    while (num != 0) {
+        // Getting the remainder when divided by 8
+        int remainder = num % 8;
+        // Forming the octal number
+        octalNum += remainder * placeValue;
+        // Updating the place value
+        placeValue *= 10;
+        // Reducing the number
+        num /= 8;
+    }
+
+    return octalNum;
+}
+
+void entryFileMaker(char* inFile)
+{
+    char *fileName = malloc(strlen(inFile) + 3);
+    sprintf(fileName, "%s.ent", inFile);
+    FILE* entFile = OpenFile(fileName, "w");
+    Label** symbol_table =  get_symbol_table();
+    for (int i = 0; i < sizeof(symbol_table)/sizeof(Label); i++)
+    {
+        if (strcmp(symbol_table[i]->type, "entry") == 0)
+        {
+            fprintf(entFile, "%s %d\n", symbol_table[i]->name, symbol_table[i]->value);
+        }
+    }
+    fclose(entFile);
+}
+
+void externFileMaker(char* inFile)
+{
+    char *fileName = malloc(strlen(inFile) + 3);
+    sprintf(fileName, "%s.ext", inFile);
+    FILE* extFile = OpenFile(fileName, "w");
+    Label** symbol_table = get_symbol_table();
+
+    for (int i = 0; i < sizeof(symbol_table)/sizeof(Label); i++)
+    {
+        if (strcmp(symbol_table[i]->type, "extern") == 0)
+        {
+            for (int j = 0; j < sizeof(codeSegment); j++)
+            {
+                if (codeSegment[j] == symbol_table[i]->value)
+                {
+                    fprintf(extFile, "%s %d\n", symbol_table[i]->name, j+100);
+                }
+            }
+        }
+    }
+    fclose(extFile);
+}
+
+void objectFileMaker(char* inFile)
+{
+    char *fileName = malloc(strlen(inFile) + 2);
+    sprintf(fileName, "%s.ob", inFile);
+    FILE* obFile = OpenFile(fileName, "w");
+    int codeSegmentCounter = sizeof(codeSegment);
+    int dataSegmentCounter = sizeof(dataSegment);
+    fprintf(obFile, "%d %d\n", codeSegmentCounter, dataSegmentCounter);
+    int counter = 0;
+    for (int i = 0; i < codeSegmentCounter; i++)
+    {
+        counter++;
+        fprintf(obFile, "%d %d\n", counter+100, intToOctal(codeSegment[i]));
+    }
+    for (int i = 0; i < dataSegmentCounter; i++)
+    {
+        counter++;
+        fprintf(obFile, "%d %d\n", counter+100, intToOctal(dataSegment[i]));
+    }
+    fclose(obFile);
 }

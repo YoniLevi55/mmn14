@@ -5,8 +5,9 @@
 #include "macro_processor.h"
 #include <stdbool.h>
 #include "string_helper.h"
+#include "FirstPass.h"
 
-
+char *symbolNames = NULL;
 int macroCount = 0;
 
 bool isMacro(char* line) //checking if the line is a macro.
@@ -35,9 +36,29 @@ void preProcessFile(char* inputFile) //processing the initial input file.
     FILE* outFile = OpenFile(outputFile, "w"); //creating the output file for writing.
     char* line;
     int i = 0;
+    int labels = 0;
+    int errorCount = 0;
     Macro* currentMacro; //creating a pointer to the current macro.
     while ((line = ReadLine(inFile)) != NULL)
     {
+        line = trimWhiteSpace(line); //trimming white space from the beginning of the line.
+        if (isLabel(line))
+        {
+            int count = 0;
+            char** labelSplit = split_string(line, ':', &count);
+            if (symbolNames == NULL)
+            {
+                symbolNames = malloc(strlen(labelSplit[0]) + 1);
+                strcpy(&symbolNames[labels], labelSplit[0]);
+                labels++;
+            }
+            else
+            {
+                symbolNames = realloc(symbolNames, strlen(symbolNames) + strlen(labelSplit[0]) + 1);
+                strcpy(&symbolNames[labels], labelSplit[0]);
+                labels++;
+            }
+        }
         if (isMacro(line)) //checking if the line is a macro.
         {
             if (macroCount == 0) //allocating memory for the macros array.
@@ -89,8 +110,24 @@ void preProcessFile(char* inputFile) //processing the initial input file.
         }
         else
         {
-            fprintf(outFile, "%s", line); //printing the line to the output file (if it is not a macro).
+            fprintf(outFile, "%s\n", line); //printing the line to the output file (if it is not a macro).
         }
+    }
+    for (int i = 0; i < macroCount; i++) //freeing the memory allocated for the macros.
+    {
+        for (int j = 0; j < labels; j++)
+        {
+            if (macros[i]->Name == &symbolNames[j])
+            {
+                printf("Error: Macro name conflicts with label name.\n");
+                errorCount++;
+            }
+        }
+    }
+    if (errorCount > 0)
+    {
+        printf("Errors found. Exiting...\n");
+        exit(1);
     }
     fclose(inFile); //closing the input file.
     fclose(outFile); //closing the output file.

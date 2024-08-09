@@ -12,8 +12,9 @@ bool is_number(const char* str);
 bool is_number_with_hash(const char* str);
 bool is_operand(const char* str);
 bool is_dereferenced_operand(const char* str);
-void split_args(const char* args, char* argOne, char* argTwo);
+void split_args(const char* args, char** argOne, char** argTwo);
 int opcode_coder(char* opcode, char* args);
 int getNumOfArgs(const char* args);
-
-
+void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo);
+bool validator(char* op, char* argOne, char* argTwo);
+int findMethod(char* arg);

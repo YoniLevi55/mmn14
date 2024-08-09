@@ -24,7 +24,16 @@ int main(int argc, char *argv[])
         printf("Pre Processing file: %s\n", filename);
         // 1. preprocess file
         preProcessFile(filename);
+        printf("First Pass file: %s\n", filename);
         firstPass(filename);
+        printf("Second Pass file: %s\n", filename);
+        secondPass(filename);
+        printf("calling entryFileMaker for file: %s\n", filename);
+        entryFileMaker(filename);
+        printf("calling externFileMaker\n");
+        externFileMaker(filename);
+        printf("calling objectFileMaker\n");
+        objectFileMaker(filename);
         // 2. first pass
         // 3. second pass
         // 4. output files
