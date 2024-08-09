@@ -142,7 +142,8 @@ bool is_dereferenced_operand(const char* str)
 }
 
 void split_args(const char* args, char** argOne, char** argTwo) {
-    if (args == NULL) {
+    if (args == NULL || strcmp(args, "") == 0)
+    {
         *argOne = NULL;
         *argTwo = NULL;
         return;
@@ -156,12 +157,10 @@ void split_args(const char* args, char** argOne, char** argTwo) {
     }
     else if (count == 2)
     {
-        // printf("argOne: %s\n", splitted[0]);
-        // printf("argTwo: %s\n", splitted[1]);
         *argOne = malloc(strlen(splitted[0]));
         *argTwo = malloc(strlen(splitted[1]));
-        strcpy(*argOne, splitted[0]);
-        strcpy(*argTwo, splitted[1]);
+        strcpy(*argOne, trimWhiteSpace(splitted[0]));
+        strcpy(*argTwo, trimWhiteSpace(splitted[1]));
     }
 }
 
@@ -267,6 +266,14 @@ void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo)
             value2 = atoi(&argTwo[2]);
         }
         *codeOne = (ABSOLUTE | (value << 6) | (value2 << 3));
+    }
+    else if (argOne == NULL)
+    {
+        *codeOne = 0;
+    }
+    else if (argTwo == NULL)
+    {
+        *codeTwo = 0;
     }
 }
 
@@ -389,7 +396,7 @@ bool cmpValidator(char* op, char* argOne, char* argTwo)
 
 bool addValidator(char* op, char* argOne, char* argTwo)
 {
-    if ((findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT || findMethod(argTwo) == REGISTER_DIRECT))
+    if ((findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == DIRECT || findMethod(argTwo) == REGISTER_INDIRECT || findMethod(argTwo) == REGISTER_DIRECT))
     {
         return true;
     }

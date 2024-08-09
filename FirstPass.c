@@ -24,7 +24,7 @@ bool isLabel(char *line)
 {
     char* trimmedLine = trimWhiteSpace(line);
     int colonPos = findFirstSign(trimmedLine, ':');
-    bool validLabel = colonPos > 1 && ((trimmedLine[0] > 64 && trimmedLine[0] < 91) || (trimmedLine[0] > 96 && trimmedLine[0] < 123));
+    bool validLabel = colonPos >= 1 && ((trimmedLine[0] > 64 && trimmedLine[0] < 91) || (trimmedLine[0] > 96 && trimmedLine[0] < 123));
     if (validLabel) //checks if their is a valid label, checks that first character is a capital letter and that the colon is not the first character.
     {
         return true;
@@ -84,21 +84,40 @@ void removeLastChar(char* str) {
     }
 }
 
+void free_if_not_null(void* ptr)
+{
+    if (ptr != NULL)
+    {
+        free(ptr);
+    }
+}
+
 void firstPass(char *inFile)
 {
     char *line;
-    bool labelFound = false; //FLAG!
     char *fileName = malloc(strlen(inFile) + 3);
     sprintf(fileName, "%s.am", inFile);
     FILE *file = OpenFile(fileName, "r");
-    char *label = NULL;
-    char *operation = NULL;
-    char *datatype = NULL;
-    char *args = NULL;
+
     int lineCount = 0;
     while ((line = ReadLine(file)) != NULL)
     {
-        printf("Processing line %s", line);
+        bool labelFound = false; //FLAG!
+        bool isEntry = false;
+        bool isExtern = false;
+        bool isData = false;
+        bool isString = false;
+        char *label = NULL;
+        char *operation = NULL;
+        char *datatype = NULL;
+        char *args = NULL;
+        char* argOne = NULL;
+        char* argTwo = NULL;
+
+        printf("Processing line (%d) %s",lineCount, line);
+        if(lineCount == 20){
+            printf("Breakpoint");
+        }
         lineCount++;
         char* trimmedLine = trimWhiteSpace(line);
         if (strlen(trimmedLine) > MAX_LINE_LENGTH)
@@ -119,13 +138,18 @@ void firstPass(char *inFile)
         }
         if (datatype != NULL)
         {
-            if (labelFound && (strncmp(datatype, ".entry", 5) == 0 || strncmp(datatype, ".extern", 7) == 0))
+            isData = strncmp(datatype, ".data", 5) == 0;
+            isString = strncmp(datatype, ".string", 7) == 0;
+            isExtern = strncmp(datatype, ".extern", 7) == 0;
+            isEntry = strncmp(datatype, ".entry", 6) == 0;
+
+            if (labelFound && (isEntry || isExtern))
             {
                 printf("Warning: Label will be ignored.\n");
                 continue;
             }
 
-            if ((datatype != NULL) && ((strncmp(datatype, ".data", 5) == 0) || (strncmp(datatype, ".string", 7) == 0)))
+            if ((datatype != NULL) && (isData || isString))
             {
                 if(labelFound)
                 {
@@ -138,7 +162,7 @@ void firstPass(char *inFile)
                         add_symbol(label, DC, ".data");
                     }
                 }
-                if (strncmp(datatype, ".data", 5) == 0) //data coding into array
+                if (isData) //data coding into array
                 {
                     int count = 0;
                     char** data = split_string(args, ',', &count);
@@ -156,7 +180,7 @@ void firstPass(char *inFile)
                         DC++;
                     }
                 }
-                else if (strncmp(datatype, ".string", 7) == 0)
+                else if (isString)
                 {
                     for (int i = 0; i < strlen(args); i++)
                     {
@@ -173,9 +197,9 @@ void firstPass(char *inFile)
                     continue;
                 }
             }
-            else if (strncmp(datatype, ".entry", 6) == 0 || strncmp(datatype, ".extern", 7) == 0)
+            else if (isEntry || isExtern)
             {
-                if (strncmp(datatype, ".extern", 7) == 0)
+                if (isExtern)
                 {
                     int count = 0;
                     char** outLabels = split_string(args, ' ', &count);
@@ -183,16 +207,21 @@ void firstPass(char *inFile)
                     {
                         add_symbol(outLabels[i], 0, ".extern");
                     }
-                    label = NULL;
-                    operation = NULL;
-                    datatype = NULL;
-                    args = NULL;
+                    free_if_not_null(label);
+                    free_if_not_null(operation);
+                    free_if_not_null(datatype);
+                    free_if_not_null(args);
+                    free_if_not_null(argOne);
+                    free_if_not_null(argTwo);
                     continue;
                 }
-                label = NULL;
-                operation = NULL;
-                datatype = NULL;
-                args = NULL;
+                free_if_not_null(label);
+                free_if_not_null(operation);
+                free_if_not_null(datatype);
+                free_if_not_null(args);
+                free_if_not_null(argOne);
+                free_if_not_null(argTwo);
+
                 continue;
             }
             continue;
@@ -214,17 +243,11 @@ void firstPass(char *inFile)
             set_error(line, "Operation name incorrect.");
         }
         int opcodeCode = opcode_coder(operation, args);
-        char* argOne = NULL;
-        char* argTwo = NULL;
         int codeOne = 0;
         int codeTwo = 0;
         split_args(args, &argOne, &argTwo);
-        argOne = trimWhiteSpace(argOne);
-        argTwo = trimWhiteSpace(argTwo);
         if (validator(operation, argOne, argTwo) == false)
         {
-            printf("Error: Invalid arguments to opcode name %s %s %s\n", operation, argOne, argTwo);
-
             set_error(line, "Invalid arguments to opcode name");
         }
         if (codeSegment == NULL)
@@ -232,7 +255,7 @@ void firstPass(char *inFile)
             // printf("Allocating memory for codeSegment\n");
             codeSegment = (int*) malloc(sizeof(int));
         }
-        codeSegment[IC] = opcodeCode;
+        codeSegment[IC+1] = opcodeCode;
         L = getNumOfArgs(args);
         if (getNumOfArgs(args) == 2 && ((is_operand(argOne)|| is_dereferenced_operand(argOne)) && (is_operand(argTwo) || is_dereferenced_operand(argTwo))))
         {
@@ -285,12 +308,12 @@ void firstPass(char *inFile)
                 break;
         }
         IC += L;
-        label = NULL;
-        operation = NULL;
-        datatype = NULL;
-        args = NULL;
-        argOne = NULL;
-        argTwo = NULL;
+        free_if_not_null(label);
+        free_if_not_null(operation);
+        free_if_not_null(datatype);
+        free_if_not_null(args);
+        free_if_not_null(argOne);
+        free_if_not_null(argTwo);
         labelFound = false;
     }
     if (get_error_count() > 0)
@@ -328,8 +351,6 @@ void secondPass(char *inFile)
         char* argOne = NULL;
         char* argTwo = NULL;
         split_args(args, &argOne, &argTwo);
-        argOne = trimWhiteSpace(argOne);
-        argTwo = trimWhiteSpace(argTwo);
         L = getNumOfArgs(args);
         if (getNumOfArgs(args) == 2 && ((is_operand(argOne) || is_operand(argTwo) || is_dereferenced_operand(argOne) || is_dereferenced_operand(argTwo)) || (is_operand(argOne) || is_operand(argTwo) || is_dereferenced_operand(argOne) || is_dereferenced_operand(argTwo))))
         {
@@ -372,10 +393,13 @@ void entryFileMaker(char* inFile)
     sprintf(fileName, "%s.ent", inFile);
     FILE* entFile = OpenFile(fileName, "w");
     Label** symbol_table =  get_symbol_table();
-    for (int i = 0; i < sizeof(symbol_table)/sizeof(Label); i++)
+    int symbol_count = get_symbol_count();
+    for (int i = 0; i < symbol_count; i++)
     {
+        printf("type: %s\n", symbol_table[i]->type);
         if (strcmp(symbol_table[i]->type, "entry") == 0)
         {
+            printf("Writing to entry file: %s %d\n", symbol_table[i]->name, symbol_table[i]->value);
             fprintf(entFile, "%s %d\n", symbol_table[i]->name, symbol_table[i]->value);
         }
     }
@@ -388,8 +412,9 @@ void externFileMaker(char* inFile)
     sprintf(fileName, "%s.ext", inFile);
     FILE* extFile = OpenFile(fileName, "w");
     Label** symbol_table = get_symbol_table();
+    int symbol_count = get_symbol_count();
 
-    for (int i = 0; i < sizeof(symbol_table)/sizeof(Label); i++)
+    for (int i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->type, "extern") == 0)
         {
