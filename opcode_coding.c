@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include "string_helper.h"
 #include "FirstPass.h"
+#include "opcode_coding.h"
 
 enum OPCODES
 {
@@ -67,20 +68,6 @@ enum OPCODES keyfromstring(char *key)
     return OP_UNKNOWN;
 }
 
-enum ARE
-{
-    ABSOLUTE = 4,
-    EXTERNAL = 1,
-    RELOCATABLE = 2,
-};
-
-enum METHODS
-{
-    IMMEDIATE = 1,
-    DIRECT = 2,
-    REGISTER_INDIRECT = 4,
-    REGISTER_DIRECT = 8,
-};
 
 #define OPCODE_OFFSET 11
 #define ORIGIN_METHOD_OFFSET 7
@@ -185,23 +172,25 @@ int getNumOfArgs(const char* args)
     return count;
 }
 
-int findMethod(char* arg)
+
+
+enum METHODS findMethod(char* arg)
 {
     if (is_number_with_hash(arg))
     {
-        return 1;
+        return IMMEDIATE;
     }
     else if (is_dereferenced_operand(arg))
     {
-        return 3;
+        return REGISTER_INDIRECT;
     }
     else if (is_operand(arg))
     {
-        return 4;
+        return REGISTER_DIRECT;
     }
     else
     {
-        return 2;
+        return DIRECT;
     }
 }
 
@@ -209,71 +198,71 @@ void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo)
 {
     argOne = trimWhiteSpace(argOne);
     argTwo = trimWhiteSpace(argTwo);
-    if (findMethod(argOne) == 1)
+    if (findMethod(argOne) == IMMEDIATE)
     {
         int value = atoi(&argOne[1]);
         *codeOne = (ABSOLUTE | (value << 6));
     }
-    if (findMethod(argTwo) == 1)
+    if (findMethod(argTwo) == IMMEDIATE)
     {
         int value = atoi(&argTwo[1]);
         *codeTwo = (ABSOLUTE | (value << 6));
     }
-    if (findMethod(argOne) == 2)
+    if (findMethod(argOne) == DIRECT)
     {
         *codeOne = -1;
     }
-    if (findMethod(argTwo) == 2)
+    if (findMethod(argTwo) == DIRECT)
     {
         *codeTwo = -1;
     }
-    if (findMethod(argOne) == 4  && argTwo == NULL)
+    if (findMethod(argOne) == REGISTER_DIRECT  && argTwo == NULL)
     {
         int value = atoi(&argOne[1]);
         *codeOne = (ABSOLUTE | (value << 3));
     }
-    else if (findMethod(argOne) == 4 && (findMethod(argTwo) == 1 || findMethod(argTwo) == 2))
+    else if (findMethod(argOne) == REGISTER_DIRECT && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT))
     {
         int value = atoi(&argOne[1]);
         *codeOne = (ABSOLUTE | (value << 6));
     }
-    else if (findMethod(argTwo) == 4 && (findMethod(argOne) == 1|| findMethod(argOne) == 2))
+    else if (findMethod(argTwo) == REGISTER_DIRECT && (findMethod(argOne) == IMMEDIATE|| findMethod(argOne) == DIRECT))
     {
         int value = atoi(&argTwo[1]);
         *codeTwo = (ABSOLUTE | (value << 3));
     }
-    else if (findMethod(argOne) == 3 && argTwo == NULL)
+    else if (findMethod(argOne) == REGISTER_INDIRECT && argTwo == NULL)
     {
         int value = atoi(&argOne[2]);
         *codeOne = (ABSOLUTE | (value << 3));
     }
-    else if (findMethod(argOne) == 3&& (findMethod(argTwo) == 1|| findMethod(argTwo) == 2))
+    else if (findMethod(argOne) == REGISTER_INDIRECT && (findMethod(argTwo) == IMMEDIATE|| findMethod(argTwo) == DIRECT))
     {
         int value = atoi(&argOne[2]);
         *codeOne = (ABSOLUTE | (value << 6));
     }
-    else if (findMethod(argTwo) == 3 && (findMethod(argOne) == 1|| findMethod(argOne) == 2))
+    else if (findMethod(argTwo) == REGISTER_INDIRECT && (findMethod(argOne) == IMMEDIATE|| findMethod(argOne) == DIRECT ))
     {
         int value = atoi(&argTwo[2]);
         *codeTwo = (ABSOLUTE | (value << 3));
     }
-    else if ((findMethod(argOne) == 4 || findMethod(argOne) == 3) && (findMethod(argTwo) == 4 || findMethod(argTwo) == 3))
+    else if ((findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == REGISTER_DIRECT || findMethod(argTwo) == REGISTER_INDIRECT))
     {
         int value = 0;
         int value2  = 0;
-        if (findMethod(argOne) == 4)
+        if (findMethod(argOne) == REGISTER_DIRECT)
         {
             value = atoi(&argOne[1]);
         }
-        else if (findMethod(argOne) == 3)
+        else if (findMethod(argOne) == REGISTER_INDIRECT)
         {
             value = atoi(&argOne[2]);
         }
-        if (findMethod(argTwo) == 4)
+        if (findMethod(argTwo) == REGISTER_DIRECT)
         {
             value2 = atoi(&argTwo[1]);
         }
-        else if (findMethod(argTwo) == 3)
+        else if (findMethod(argTwo) == REGISTER_INDIRECT)
         {
             value2 = atoi(&argTwo[2]);
         }
@@ -382,7 +371,7 @@ int opcode_coder(char* opcode, char* args)
 
 bool movValidator(char* op, char* argOne, char* argTwo)
 {
-    if ((findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4 || findMethod(argOne) == 3) && (findMethod(argTwo) == 1 || findMethod(argTwo) == 2 || findMethod(argTwo) == 4))
+    if ((findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT || findMethod(argTwo) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -391,7 +380,7 @@ bool movValidator(char* op, char* argOne, char* argTwo)
 
 bool cmpValidator(char* op, char* argOne, char* argTwo)
 {
-    if ((findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4 || findMethod(argOne) == 3) && (findMethod(argTwo) == 1 || findMethod(argTwo) == 2 || findMethod(argTwo) == 4 || findMethod(argTwo) == 3))
+    if ((findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT || findMethod(argTwo) == REGISTER_DIRECT || findMethod(argTwo) == REGISTER_INDIRECT))
     {
         return true;
     }
@@ -400,7 +389,7 @@ bool cmpValidator(char* op, char* argOne, char* argTwo)
 
 bool addValidator(char* op, char* argOne, char* argTwo)
 {
-    if ((findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4 || findMethod(argOne) == 3) && (findMethod(argTwo) == 1 || findMethod(argTwo) == 2 || findMethod(argTwo) == 4))
+    if ((findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT || findMethod(argTwo) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -409,7 +398,7 @@ bool addValidator(char* op, char* argOne, char* argTwo)
 
 bool subValidator(char* op, char* argOne, char* argTwo)
 {
-    if ((findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4 || findMethod(argOne) == 3) && (findMethod(argTwo) == 1 || findMethod(argTwo) == 2 || findMethod(argTwo) == 4))
+    if ((findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT || findMethod(argTwo) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -418,7 +407,7 @@ bool subValidator(char* op, char* argOne, char* argTwo)
 
 bool leaValidator(char* op, char* argOne, char* argTwo)
 {
-    if (findMethod(argOne) == 1 && (findMethod(argTwo) == 1 || findMethod(argTwo) == 2 || findMethod(argTwo) == 4))
+    if (findMethod(argOne) == DIRECT && (findMethod(argTwo) == DIRECT || findMethod(argTwo) == REGISTER_INDIRECT || findMethod(argTwo) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -427,7 +416,7 @@ bool leaValidator(char* op, char* argOne, char* argTwo)
 
 bool clrValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -436,7 +425,7 @@ bool clrValidator(char* op, char* argOne, char* argTwo)
 
 bool notValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -445,7 +434,7 @@ bool notValidator(char* op, char* argOne, char* argTwo)
 
 bool incValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -454,7 +443,7 @@ bool incValidator(char* op, char* argOne, char* argTwo)
 
 bool decValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -463,7 +452,7 @@ bool decValidator(char* op, char* argOne, char* argTwo)
 
 bool jmpValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT))
     {
         return true;
     }
@@ -472,7 +461,7 @@ bool jmpValidator(char* op, char* argOne, char* argTwo)
 
 bool bneValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT))
     {
         return true;
     }
@@ -481,7 +470,7 @@ bool bneValidator(char* op, char* argOne, char* argTwo)
 
 bool redValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT))
     {
         return true;
     }
@@ -490,7 +479,7 @@ bool redValidator(char* op, char* argOne, char* argTwo)
 
 bool prnValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2 || findMethod(argOne) == 4 || findMethod(argOne) == 3))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT))
     {
         return true;
     }
@@ -499,7 +488,7 @@ bool prnValidator(char* op, char* argOne, char* argTwo)
 
 bool jsrValidator(char* op, char* argOne, char* argTwo)
 {
-    if (argTwo == NULL && (findMethod(argOne) == 1 || findMethod(argOne) == 2))
+    if (argTwo == NULL && (findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT))
     {
         return true;
     }

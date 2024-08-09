@@ -4,6 +4,22 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+enum ARE
+{
+    ABSOLUTE = 4,
+    EXTERNAL = 1,
+    RELOCATABLE = 2,
+};
+
+enum METHODS
+{
+    IMMEDIATE = 1,
+    DIRECT = 2,
+    REGISTER_INDIRECT = 4,
+    REGISTER_DIRECT = 8,
+};
+
+
 bool isDataType(char* line);
 bool isOperation(char* line);
 void example_pointer(char* line, char** label, char** operation, char** datatype, char** args);
@@ -17,4 +33,4 @@ int opcode_coder(char* opcode, char* args);
 int getNumOfArgs(const char* args);
 void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo);
 bool validator(char* op, char* argOne, char* argTwo);
-int findMethod(char* arg);
+enum METHODS findMethod(char* arg);

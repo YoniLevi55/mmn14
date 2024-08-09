@@ -47,61 +47,45 @@ int findFirstSign(char *line, char sign)
     }
 }
 
-
 char** split_string(const char* str, const char delimiter, int* count) {
-    // Initialize count to zero
-    *count = 0;
-
-    // Copy the input string to avoid modifying the original
-    char* str_copy = strdup(str);
-    if (str_copy == NULL) {
-        perror("Failed to allocate memory");
-        exit(EXIT_FAILURE);
-    }
-
-    // Count the number of tokens
-    char* temp = str_copy;
-    while (*temp) {
-        if (*temp == delimiter) {
-            (*count)++;
+    int length = strlen(str);
+    int token_count = 0;
+    
+    // First pass to count the number of tokens
+    for (int i = 0; i < length; i++) {
+        if (str[i] == delimiter) {
+            token_count++;
         }
-        temp++;
     }
-    (*count)++;  // Number of tokens is number of delimiters + 1
+    token_count++;  // Add one for the last token
 
     // Allocate memory for the array of strings
-    char** result = malloc((*count) * sizeof(char*));
-    if (result == NULL) {
-        perror("Failed to allocate memory");
+    char** tokens = (char**)malloc(token_count * sizeof(char*));
+    if (tokens == NULL) {
+        perror("Unable to allocate memory");
         exit(EXIT_FAILURE);
     }
 
-    if (*count == 1) {
-        result[0] = strdup(str_copy);
-        if (result[0] == NULL) {
-            perror("Failed to allocate memory");
-            exit(EXIT_FAILURE);
+    // Allocate memory and copy each token
+    int start = 0;
+    int token_index = 0;
+    for (int i = 0; i <= length; i++) {
+        if (str[i] == delimiter || str[i] == '\0') {
+            int token_length = i - start;
+            tokens[token_index] = (char*)malloc((token_length + 1) * sizeof(char));
+            if (tokens[token_index] == NULL) {
+                perror("Unable to allocate memory");
+                exit(EXIT_FAILURE);
+            }
+            strncpy(tokens[token_index], str + start, token_length);
+            tokens[token_index][token_length] = '\0';
+            token_index++;
+            start = i + 1;
         }
-        free(str_copy);
-        return result;
     }
 
-    // Split the string into tokens
-    int index = 0;
-    char* token = strtok(str_copy, &delimiter);
-    while (token != NULL) {
-        result[index] = strdup(token);
-        if (result[index] == NULL) {
-            perror("Failed to allocate memory");
-            exit(EXIT_FAILURE);
-        }
-        index++;
-        token = strtok(NULL, &delimiter);
-    }
+    // Update the count
+    *count = token_count;
 
-    // Free the copy of the input string
-    free(str_copy);
-
-    return result;
+    return tokens;
 }
-

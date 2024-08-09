@@ -154,7 +154,6 @@ void firstPass(char *inFile)
                         }
                         dataSegment[DC] = atoi(data[i]);
                         DC++;
-                        dataSegment = realloc(dataSegment, (DC) * sizeof(int));
                     }
                 }
                 else if (strncmp(datatype, ".string", 7) == 0)
@@ -165,13 +164,9 @@ void firstPass(char *inFile)
                         {
                             dataSegment = malloc(sizeof(int));
                         }
-                        else
-                        {
-                            dataSegment = realloc(dataSegment, (DC) * sizeof(int));
-                        }
                         dataSegment[DC] = args[i];
                         DC++;
-                        dataSegment = realloc(dataSegment, (DC) * sizeof(int));
+                        dataSegment = realloc(dataSegment, (DC) * sizeof(int)+1);
                     }
                     dataSegment[DC] = 0;
                     DC++;
@@ -200,6 +195,7 @@ void firstPass(char *inFile)
                 args = NULL;
                 continue;
             }
+            continue;
         }
         if (labelFound)
         {
@@ -227,15 +223,14 @@ void firstPass(char *inFile)
         argTwo = trimWhiteSpace(argTwo);
         if (validator(operation, argOne, argTwo) == false)
         {
+            printf("Error: Invalid arguments to opcode name %s %s %s\n", operation, argOne, argTwo);
+
             set_error(line, "Invalid arguments to opcode name");
         }
         if (codeSegment == NULL)
         {
             // printf("Allocating memory for codeSegment\n");
             codeSegment = (int*) malloc(sizeof(int));
-        } else {
-            // printf("Reallocating memory for codeSegment\n");
-            codeSegment = realloc(codeSegment, (IC + 1) * sizeof(int));
         }
         codeSegment[IC] = opcodeCode;
         L = getNumOfArgs(args);
@@ -243,7 +238,7 @@ void firstPass(char *inFile)
         {
             L = 1;
         }
-        codeSegment = realloc(codeSegment, (IC + L) * sizeof(int)); //error
+        codeSegment = realloc(codeSegment, (IC + L + 1) * sizeof(int)); //error
         operandCoder(argOne, argTwo, &codeOne, &codeTwo);
         int codeCount = 0;
         if (codeOne != 0)
@@ -259,7 +254,7 @@ void firstPass(char *inFile)
             case 0:
                 break;
             case 1:
-                if (findMethod(argOne) == 2)
+                if (findMethod(argOne) == DIRECT)
                 {
                     codeSegment[IC + 1] = 0;
                     break;
@@ -267,19 +262,19 @@ void firstPass(char *inFile)
                 codeSegment[IC + 1] = codeOne;
                 break;
             case 2:
-                if (findMethod(argOne) == 2)
+                if (findMethod(argOne)==  DIRECT)
                 {
                     codeSegment[IC + 2] = codeTwo;
                     codeSegment[IC + 1] = 0;
                     break;
                 }
-                else if (findMethod(argTwo) == 2)
+                else if (findMethod(argTwo) == DIRECT)
                 {
                     codeSegment[IC + 1] = codeOne;
                     codeSegment[IC + 2] = 0;
                     break;
                 }
-                else if (findMethod(argOne) == 2 && findMethod(argTwo) == 2)
+                else if (findMethod(argOne) == DIRECT && findMethod(argTwo) == DIRECT)
                 {
                     codeSegment[IC + 2] = 0;
                     codeSegment[IC + 1] = 0;
