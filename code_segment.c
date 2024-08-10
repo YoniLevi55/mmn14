@@ -31,11 +31,15 @@ void codeSegment_add_code(int value){
     logger(DEBUG,"codeSegment:: Adding code: %d\n",value);
     codeSegment[IC] = value;
     IC++;
+    logger(DEBUG,"IC: %d\n",IC);
     codeSegmentSize++;
 }
 
 void clear_IC(){
     IC = 0;
+}
+void inc_IC(int L){
+    IC+=L;
 }
 
 void printCodeSegment()
@@ -46,7 +50,7 @@ void printCodeSegment()
 
     for (int i = 0; i < codeSegmentSize; i++)
     {
-        logger(DEBUG,"%d\n", codeSegment[i]);
+        logger(DEBUG,"(%d)%d\n",i, codeSegment[i]);
     }
     logger(DEBUG,"--------------------\n");
 }

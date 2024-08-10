@@ -6,6 +6,7 @@
 #include "FirstPass.h"
 #include <stdbool.h>
 #include "logger.h"
+#include "symbol_table.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,9 +25,11 @@ int main(int argc, char *argv[])
         logger(INFO, "calling firstPass for file: %s\n", filename);
         firstPass(filename);
         printCodeSegment();
+        print_symbol_table();
         logger(INFO, "calling secondPass for file: %s\n", filename);
         secondPass(filename);
         printCodeSegment();
+        print_symbol_table();
         logger(INFO, "calling entryFileMaker for file: %s\n", filename);
         entryFileMaker(filename);
         logger(INFO, "calling externFileMaker for file: %s\n", filename);

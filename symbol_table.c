@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-
+#include "logger.h"
 #include "symbol_table.h"
 
 Label** symbol_table;
 int symbol_count = 0;
 
 void add_symbol(char* name, int value, char* type){
+    logger(DEBUG,"Adding symbol: %s, value: %d, type: %s\n",name, value, type);
     Label* newLabel = (Label*)malloc(sizeof(Label));
     newLabel->name = malloc(strlen(name)+1);
     newLabel->type = malloc(strlen(type)+1);
@@ -30,7 +31,7 @@ bool is_symbol_exist(char *symbol){
     {
         return false;
     }
-    for (int i = 0; i < sizeof(symbol_table)/sizeof(Label); i++)
+    for (int i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->name, symbol) == 0)
         {
@@ -46,7 +47,7 @@ int get_symbol_count(){
 }
 
 Label* get_symbol(char *symbol){
-    for (int i = 0; i < sizeof(symbol_table)/sizeof(Label); i++)
+    for (int i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->name, symbol) == 0)
         {
@@ -70,7 +71,7 @@ int getLabelValue(char* label)
 }
 
 void set_ic_offset(int offset){
-    for (int i = 0; i < sizeof(symbol_table)/sizeof(Label); i++)
+    for (int i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->type, ".data") == 0)
             symbol_table[i]->value += offset + 100;
@@ -78,13 +79,22 @@ void set_ic_offset(int offset){
 }
 
 void set_type(char *symbol, char* type){
-    for (int i = 0; i < sizeof(symbol_table)/sizeof(Label); i++)
+    for (int i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->name, symbol) == 0)
         {
             symbol_table[i]->type = realloc(symbol_table[i]->type, strlen(type)+1);
             strcpy(symbol_table[i]->type, type);
         }
+    }
+}
+
+void print_symbol_table(){
+    logger(DEBUG,"Symbol Table:\n");
+    logger(DEBUG,"size: %d\n", symbol_count);
+    for (int i = 0; i < symbol_count; i++)
+    {
+        logger(DEBUG,"Name: %s, Value: %d, Type: %s\n", symbol_table[i]->name, symbol_table[i]->value, symbol_table[i]->type);
     }
 }
 

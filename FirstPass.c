@@ -13,9 +13,6 @@
 #include "code_segment.h"
 #include "logger.h"
 
-int L = 0;
-
-
 void breakLine(char* line, char** label, char** operation, char** datatype, char** args) {
     int count;
     char** splitted = split_string(line, ' ', &count);
@@ -144,8 +141,7 @@ void firstPass(char *inFile)
                     {
                         dataSegment_add_data(args[i]);
                     }
-                    // dataSegment[DC] = 0;
-                    // DC++;
+                    dataSegment_add_data('\0');
                     continue;
                 }
             }
@@ -167,7 +163,6 @@ void firstPass(char *inFile)
                     free_if_not_null(argTwo);
                     continue;
                 }
-                //TODO: Implement entry
                 free_if_not_null(label);
                 free_if_not_null(operation);
                 free_if_not_null(datatype);
@@ -204,18 +199,6 @@ void firstPass(char *inFile)
             set_error(line, "Invalid arguments to opcode name");
         }
         codeSegment_add_code(opcodeCode);
-        // if (codeSegment == NULL)
-        // {
-        //     // printf("Allocating memory for codeSegment\n");
-        //     codeSegment = (int*) malloc(sizeof(int));
-        // }
-        // codeSegment[IC+1] = opcodeCode;
-        L = getNumOfArgs(args);
-        if (getNumOfArgs(args) == 2 && ((is_operand(argOne)|| is_dereferenced_operand(argOne)) && (is_operand(argTwo) || is_dereferenced_operand(argTwo))))
-        {
-            L = 1;
-        }
-        // codeSegment = realloc(codeSegment, (IC + L + 1) * sizeof(int)); //error
         operandCoder(argOne, argTwo, &codeOne, &codeTwo);
         int codeCount = 0;
         if (codeOne != 0)
@@ -233,45 +216,34 @@ void firstPass(char *inFile)
             case 1:
                 if (findMethod(argOne) == DIRECT)
                 {
-                    codeSegment_add_code(0);
-                    // codeSegment[IC + 1] = 0;
+                    codeSegment_add_code(-1);
                     break;
                 }
                 codeSegment_add_code(codeOne);
-                // codeSegment[IC + 1] = codeOne;
                 break;
             case 2:
                 if (findMethod(argOne) == DIRECT && findMethod(argTwo) != DIRECT)
                 {
-                    codeSegment_add_code(0);
+                    codeSegment_add_code(-1);
                     codeSegment_add_code(codeTwo);
-                    // codeSegment[IC + 1] = 0;
-                    // codeSegment[IC + 2] = codeTwo;
                     break;
                 }
                 else if (findMethod(argTwo) == DIRECT && findMethod(argOne) != DIRECT)
                 {
                     codeSegment_add_code(codeOne);
-                    codeSegment_add_code(0);
-                    // codeSegment[IC + 1] = codeOne;
-                    // codeSegment[IC + 2] = 0;
+                    codeSegment_add_code(-1);
                     break;
                 }
                 else if (findMethod(argOne) == DIRECT && findMethod(argTwo) == DIRECT)
                 {
-                    codeSegment_add_code(0);
-                    codeSegment_add_code(0);
-                    // codeSegment[IC + 2] = 0;
-                    // codeSegment[IC + 1] = 0;
+                    codeSegment_add_code(-1);
+                    codeSegment_add_code(-1);
                     break;
                 }
                 codeSegment_add_code(codeOne);
                 codeSegment_add_code(codeTwo);
-                // codeSegment[IC + 2] = codeTwo;
-                // codeSegment[IC + 1] = codeOne;
                 break;
         }
-        // IC += L;
         free_if_not_null(label);
         free_if_not_null(operation);
         free_if_not_null(datatype);
@@ -294,42 +266,72 @@ void secondPass(char *inFile)
     char *line;
     char *fileName = malloc(strlen(inFile) + 3);
     int count = 0;
+    int lineCount = 0;
     sprintf(fileName, "%s.am", inFile);
     FILE *file = OpenFile(fileName, "r");
-    char *label, *operation, *datatype, *args;
     while ((line = ReadLine(file)) != NULL)
     {
-        breakLine(line, &label, &operation, &datatype, &args);
-        if ((strncmp(datatype, ".data", 5) == 0) || (strncmp(datatype, ".string", 7) == 0) || (strncmp(datatype, ".extern", 6) == 0))
+        if (lineCount == 3)
         {
-            continue;
+            logger(DEBUG, "Breakpoint\n");
         }
-        if (strncmp(datatype, ".entry", 6) == 0)
+        logger(DEBUG, "Processing line (%d): %s",lineCount, line);
+        lineCount++;
+        char *label = NULL;
+        char *operation = NULL;
+        char *datatype = NULL;
+        char *args = NULL;
+        int value = 0;
+        breakLine(line, &label, &operation, &datatype, &args);
+        if (datatype != NULL)
         {
-            char** entries = split_string(args, ' ', &count);
-            for (int i = 0; i < count; i++)
+            bool isData = strncmp(datatype, ".data", 5) == 0;
+            bool isString = strncmp(datatype, ".string", 7) == 0;
+            bool isExtern = strncmp(datatype, ".extern", 7) == 0;
+            bool isEntry = strncmp(datatype, ".entry", 6) == 0;
+            if (isData || isString || isExtern)
             {
-                set_type(entries[i], ".entry");
+                continue;
             }
-            continue;
+            if (isEntry)
+            {
+                char** entries = split_string(args, ' ', &count);
+                for (int i = 0; i < count; i++)
+                {
+                    set_type(trimWhiteSpace(entries[i]), ".entry");
+                }
+                continue;
+            }
         }
         char* argOne = NULL;
         char* argTwo = NULL;
         split_args(args, &argOne, &argTwo);
-        L = getNumOfArgs(args);
-        if (getNumOfArgs(args) == 2 && ((is_operand(argOne) || is_operand(argTwo) || is_dereferenced_operand(argOne) || is_dereferenced_operand(argTwo)) || (is_operand(argOne) || is_operand(argTwo) || is_dereferenced_operand(argOne) || is_dereferenced_operand(argTwo))))
+        if (findMethod(argOne) == DIRECT && argOne != NULL)
         {
-            L = 1;
+            value = getLabelValue(argOne);
+            for (int i = 0; i < get_code_segment_size(); i++)
+            {
+                //logger(DEBUG, "codeSegment[%d] = %d\n", i, codeSegment[i]);
+                if (codeSegment[i] == -1)
+                {
+                    codeSegment[i] = value;
+                    break;
+                }
+            }
         }
-        if (isLabel(argOne))
+        if (findMethod(argTwo) == DIRECT && argTwo != NULL)
         {
-            codeSegment[IC + 1] = getLabelValue(argOne);
+            value = getLabelValue(argTwo);
+            for (int i = 0; i < get_code_segment_size(); i++)
+            {
+                //logger(DEBUG, "codeSegment[%d] = %d\n", i, codeSegment[i]);
+                if (codeSegment[i] == -1)
+                {
+                    codeSegment[i] = value;
+                    break;
+                }
+            }
         }
-        if (isLabel(argTwo))
-        {
-            codeSegment[IC + 2] = getLabelValue(argTwo);
-        }
-        IC += L;
     }
     if (get_error_count() > 0)
         exit_with_error(EXIT_FAILURE, "Errors found!");
