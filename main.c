@@ -3,7 +3,7 @@
 #include <string.h>
 #include "file_handler.h"
 #include "macro_processor.h"
-#include "FirstPass.h"
+#include "first_pass.h"
 #include <stdbool.h>
 #include "logger.h"
 #include "symbol_table.h"
@@ -16,11 +16,11 @@ int main(int argc, char *argv[])
         logger(INFO, "Usage: %s <filename>\n", argv[0]);
         return 1;
     }
-    // pre processing input files
+    // pre processing input files (expand macros)
     for (int i = 1; i < argc; i++)
     {
         char *filename = argv[i];
-        logger(INFO, "Processing file: %s\n", filename);
+        logger(INFO, "Pre Processing file: %s\n", filename);
         preProcessFile(filename);
     }
     // run first pass on pre processes files

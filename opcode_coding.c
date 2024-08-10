@@ -4,9 +4,8 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include "string_helper.h"
-#include "FirstPass.h"
 #include "opcode_coding.h"
-
+#include "first_pass.h"
 enum OPCODES //enum for the opcodes
 {
     OP_MOV = 0,

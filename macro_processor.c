@@ -5,7 +5,7 @@
 #include "macro_processor.h"
 #include <stdbool.h>
 #include "string_helper.h"
-#include "FirstPass.h"
+#include "first_pass.h"
 #include "logger.h"
 #include "errors_handler.h"
 #include "opcode_coding.h"

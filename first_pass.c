@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "file_handler.h"
-#include "FirstPass.h"
+#include "first_pass.h"
 #include <stdbool.h>
 #include <ctype.h>
 #include "string_helper.h"
@@ -337,7 +337,7 @@ void entryFileMaker(char* inFile) //creates the entry file
     {
         if (strcmp(symbol_table[i]->type, ".entry") == 0) //checks if the type is entry
         {
-            logger(INFO, "Writing to entry file: %s %d\n", symbol_table[i]->name, symbol_table[i]->value); //writes to the entry file
+            logger(DEBUG, "Writing to entry file: %s %d\n", symbol_table[i]->name, symbol_table[i]->value); //writes to the entry file
             fprintf(entFile, "%s %d\n", symbol_table[i]->name, symbol_table[i]->value);
         }
     }
