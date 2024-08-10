@@ -8,7 +8,8 @@ code_segment** codeSegment = NULL;
 int IC = 0;
 int codeSegmentSize = 0;
 
-void init_code_segment(){
+void init_code_segment() //init code segment
+{
 
     codeSegment = malloc(sizeof(code_segment*));
     codeSegment[0] = (code_segment*)malloc(sizeof(code_segment));
