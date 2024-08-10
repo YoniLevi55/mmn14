@@ -9,40 +9,11 @@
 #include "opcode_coding.h"
 #include "errors_handler.h"
 #include "symbol_table.h"
+#include "data_segment.h"
+#include "code_segment.h"
+#include "logger.h"
 
-int IC = 0, DC = 0;
 int L = 0;
-// int labelCount = 0;
-
-int *dataSegment = NULL;
-int *codeSegment = NULL;
-
-
-// char* opcodes[NUM_OF_OPCODES] = {"mov", "cmp", "add", "sub", "lea", "clr", "not", "inc", "dec", "jmp", "bne", "red", "prn", "jsr", "rts", "stop"};
-
-bool isLabel(char *line)
-{
-    char* trimmedLine = trimWhiteSpace(line);
-    int colonPos = findFirstSign(trimmedLine, ':');
-    bool validLabel = colonPos >= 1 && ((trimmedLine[0] > 64 && trimmedLine[0] < 91) || (trimmedLine[0] > 96 && trimmedLine[0] < 123));
-    if (validLabel) //checks if their is a valid label, checks that first character is a capital letter and that the colon is not the first character.
-    {
-        return true;
-    }
-    else //there is no valid label.
-    {
-        return false;
-    }
-}
-
-char* getLabel(char* line)
-{
-    int colonPos = findFirstSign(line,':');
-    char* label = malloc(colonPos - 1);
-    strncpy(label, line, colonPos - 1);
-    return label;
-}
-
 
 
 void breakLine(char* line, char** label, char** operation, char** datatype, char** args) {
@@ -76,13 +47,7 @@ void breakLine(char* line, char** label, char** operation, char** datatype, char
     strncpy(*args, &line[offset+1], strlen(line) - offset); //make sure that if data is string, return without quotes.
 }
 
-void removeLastChar(char* str) {
-    int length = strlen(str);
 
-    if (length > 0) {
-        str[length - 1] = '\0';  // Set the last character to null terminator
-    }
-}
 
 void free_if_not_null(void* ptr)
 {
@@ -114,9 +79,9 @@ void firstPass(char *inFile)
         char* argOne = NULL;
         char* argTwo = NULL;
 
-        printf("Processing line (%d) %s",lineCount, line);
+        logger(INFO, "Processing line (%d) %s",lineCount, line);
         if(lineCount == 20){
-            printf("Breakpoint");
+            logger(DEBUG, "Breakpoint\n");
         }
         lineCount++;
         char* trimmedLine = trimWhiteSpace(line);
@@ -145,7 +110,7 @@ void firstPass(char *inFile)
 
             if (labelFound && (isEntry || isExtern))
             {
-                printf("Warning: Label will be ignored.\n");
+                logger(WARNING, "Label will be ignored.");
                 continue;
             }
 
@@ -159,7 +124,7 @@ void firstPass(char *inFile)
                     }
                     else
                     {
-                        add_symbol(label, DC, ".data");
+                        add_symbol(label, get_DC(), ".data");
                     }
                 }
                 if (isData) //data coding into array
@@ -168,32 +133,17 @@ void firstPass(char *inFile)
                     char** data = split_string(args, ',', &count);
                     for (int i = 0; i < count; i++)
                     {
-                        if (dataSegment == NULL)
-                        {
-                            dataSegment = malloc(sizeof(int));
-                        }
-                        else
-                        {
-                            dataSegment = realloc(dataSegment, (DC + 1) * sizeof(int));
-                        }
-                        dataSegment[DC] = atoi(data[i]);
-                        DC++;
+                        dataSegment_add_data(atoi(data[i]));
                     }
                 }
                 else if (isString)
                 {
                     for (int i = 0; i < strlen(args); i++)
                     {
-                        if (dataSegment == NULL)
-                        {
-                            dataSegment = malloc(sizeof(int));
-                        }
-                        dataSegment[DC] = args[i];
-                        DC++;
-                        dataSegment = realloc(dataSegment, (DC) * sizeof(int)+1);
+                        dataSegment_add_data(args[i]);
                     }
-                    dataSegment[DC] = 0;
-                    DC++;
+                    // dataSegment[DC] = 0;
+                    // DC++;
                     continue;
                 }
             }
@@ -234,7 +184,7 @@ void firstPass(char *inFile)
             }
             else
             {
-                add_symbol(label, IC + 100, ".code");
+                add_symbol(label, get_IC() + 100, ".code");
             }
         }
 
@@ -250,18 +200,20 @@ void firstPass(char *inFile)
         {
             set_error(line, "Invalid arguments to opcode name");
         }
-        if (codeSegment == NULL)
-        {
-            // printf("Allocating memory for codeSegment\n");
-            codeSegment = (int*) malloc(sizeof(int));
-        }
-        codeSegment[IC+1] = opcodeCode;
+        codeSegment_add_code(opcodeCode);
+        // if (codeSegment == NULL)
+        // {
+        //     // printf("Allocating memory for codeSegment\n");
+        //     codeSegment = (int*) malloc(sizeof(int));
+        // }
+        // codeSegment[IC+1] = opcodeCode;
         L = getNumOfArgs(args);
         if (getNumOfArgs(args) == 2 && ((is_operand(argOne)|| is_dereferenced_operand(argOne)) && (is_operand(argTwo) || is_dereferenced_operand(argTwo))))
         {
             L = 1;
         }
-        codeSegment = realloc(codeSegment, (IC + L + 1) * sizeof(int)); //error
+        
+        // codeSegment = realloc(codeSegment, (IC + L + 1) * sizeof(int)); //error
         operandCoder(argOne, argTwo, &codeOne, &codeTwo);
         int codeCount = 0;
         if (codeOne != 0)
@@ -279,35 +231,45 @@ void firstPass(char *inFile)
             case 1:
                 if (findMethod(argOne) == DIRECT)
                 {
-                    codeSegment[IC + 1] = 0;
+                    codeSegment_add_code(0);
+                    // codeSegment[IC + 1] = 0;
                     break;
                 }
-                codeSegment[IC + 1] = codeOne;
+                codeSegment_add_code(codeOne);
+                // codeSegment[IC + 1] = codeOne;
                 break;
             case 2:
                 if (findMethod(argOne)==  DIRECT)
                 {
-                    codeSegment[IC + 2] = codeTwo;
-                    codeSegment[IC + 1] = 0;
+                    codeSegment_add_code(0);
+                    codeSegment_add_code(codeTwo);
+                    // codeSegment[IC + 1] = 0;
+                    // codeSegment[IC + 2] = codeTwo;
                     break;
                 }
                 else if (findMethod(argTwo) == DIRECT)
                 {
-                    codeSegment[IC + 1] = codeOne;
-                    codeSegment[IC + 2] = 0;
+                    codeSegment_add_code(codeOne);
+                    codeSegment_add_code(0);
+                    // codeSegment[IC + 1] = codeOne;
+                    // codeSegment[IC + 2] = 0;
                     break;
                 }
                 else if (findMethod(argOne) == DIRECT && findMethod(argTwo) == DIRECT)
                 {
-                    codeSegment[IC + 2] = 0;
-                    codeSegment[IC + 1] = 0;
+                    codeSegment_add_code(0);
+                    codeSegment_add_code(0);
+                    // codeSegment[IC + 2] = 0;
+                    // codeSegment[IC + 1] = 0;
                     break;
                 }
-                codeSegment[IC + 2] = codeTwo;
-                codeSegment[IC + 1] = codeOne;
+                codeSegment_add_code(codeOne);
+                codeSegment_add_code(codeTwo);
+                // codeSegment[IC + 2] = codeTwo;
+                // codeSegment[IC + 1] = codeOne;
                 break;
         }
-        IC += L;
+        // IC += L;
         free_if_not_null(label);
         free_if_not_null(operation);
         free_if_not_null(datatype);
@@ -320,12 +282,13 @@ void firstPass(char *inFile)
     {
         exit_with_error(EXIT_FAILURE, "Errors found in file." );
     }
-    set_ic_offset(IC);
+    set_ic_offset(get_IC());
 }
 
 void secondPass(char *inFile)
 {
-    IC = 0;
+    int IC = 0;
+    int* codeSegment = get_code_segment();
     char *line;
     char *fileName = malloc(strlen(inFile) + 3);
     int count = 0;
@@ -396,10 +359,10 @@ void entryFileMaker(char* inFile)
     int symbol_count = get_symbol_count();
     for (int i = 0; i < symbol_count; i++)
     {
-        printf("type: %s\n", symbol_table[i]->type);
-        if (strcmp(symbol_table[i]->type, "entry") == 0)
+        logger(DEBUG, "type: %s\n", symbol_table[i]->type);
+        if (strcmp(symbol_table[i]->type, ".entry") == 0)
         {
-            printf("Writing to entry file: %s %d\n", symbol_table[i]->name, symbol_table[i]->value);
+            logger(INFO, "Writing to entry file: %s %d", symbol_table[i]->name, symbol_table[i]->value);
             fprintf(entFile, "%s %d\n", symbol_table[i]->name, symbol_table[i]->value);
         }
     }
@@ -413,12 +376,13 @@ void externFileMaker(char* inFile)
     FILE* extFile = OpenFile(fileName, "w");
     Label** symbol_table = get_symbol_table();
     int symbol_count = get_symbol_count();
+    int* codeSegment = get_code_segment();
 
     for (int i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->type, "extern") == 0)
         {
-            for (int j = 0; j < sizeof(codeSegment); j++)
+            for (int j = 0; j < get_code_segment_size(); j++)
             {
                 if (codeSegment[j] == symbol_table[i]->value)
                 {
@@ -432,11 +396,13 @@ void externFileMaker(char* inFile)
 
 void objectFileMaker(char* inFile)
 {
+    int *dataSegment = get_data_segment();
+    int *codeSegment = get_code_segment();
     char *fileName = malloc(strlen(inFile) + 2);
     sprintf(fileName, "%s.ob", inFile);
     FILE* obFile = OpenFile(fileName, "w");
     int codeSegmentCounter = sizeof(codeSegment);
-    int dataSegmentCounter = sizeof(dataSegment);
+    int dataSegmentCounter = get_data_segment_size();
     fprintf(obFile, "%d %d\n", codeSegmentCounter, dataSegmentCounter);
     int counter = 0;
     for (int i = 0; i < codeSegmentCounter; i++)

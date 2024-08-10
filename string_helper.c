@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 char* trimWhiteSpace(char* str)
 {
@@ -88,4 +89,35 @@ char** split_string(const char* str, const char delimiter, int* count) {
     *count = token_count;
 
     return tokens;
+}
+
+bool isLabel(char *line)
+{
+    char* trimmedLine = trimWhiteSpace(line);
+    int colonPos = findFirstSign(trimmedLine, ':');
+    bool validLabel = colonPos >= 1 && ((trimmedLine[0] > 64 && trimmedLine[0] < 91) || (trimmedLine[0] > 96 && trimmedLine[0] < 123));
+    if (validLabel) //checks if their is a valid label, checks that first character is a capital letter and that the colon is not the first character.
+    {
+        return true;
+    }
+    else //there is no valid label.
+    {
+        return false;
+    }
+}
+
+char* getLabel(char* line)
+{
+    int colonPos = findFirstSign(line,':');
+    char* label = malloc(colonPos - 1);
+    strncpy(label, line, colonPos - 1);
+    return label;
+}
+
+void removeLastChar(char* str) {
+    int length = strlen(str);
+
+    if (length > 0) {
+        str[length - 1] = '\0';  // Set the last character to null terminator
+    }
 }

@@ -5,39 +5,32 @@
 #include "macro_processor.h"
 #include "FirstPass.h"
 #include <stdbool.h>
-
-// typedef struct {
-//     char label[MAX_LABEL_LENGTH];
-//     int lineNumber;
-// } Label;
+#include "logger.h"
 
 int main(int argc, char *argv[])
 {
     if (argc <= 1)
     {
-        printf("Usage: %s <filename>\n", argv[0]);
+        logger(INFO, "Usage: %s <filename>\n", argv[0]);
         return 1;
     }
     for (int i = 1; i < argc; i++)
     {
         char *filename = argv[i];
-        printf("Pre Processing file: %s\n", filename);
-        // 1. preprocess file
+        logger(INFO, "Processing file: %s\n", filename);
         preProcessFile(filename);
-        printf("First Pass file: %s\n", filename);
+        logger(INFO, "calling firstPass for file: %s\n", filename);
         firstPass(filename);
-        printf("Second Pass file: %s\n", filename);
+        printCodeSegment();
+        logger(INFO, "calling secondPass for file: %s\n", filename);
         secondPass(filename);
-        printf("calling entryFileMaker for file: %s\n", filename);
+        printCodeSegment();
+        logger(INFO, "calling entryFileMaker for file: %s\n", filename);
         entryFileMaker(filename);
-        printf("calling externFileMaker\n");
+        logger(INFO, "calling externFileMaker for file: %s\n", filename);
         externFileMaker(filename);
-        printf("calling objectFileMaker\n");
+        logger(INFO, "calling objectFileMaker for file: %s\n", filename);
         objectFileMaker(filename);
-        // 2. first pass
-        // 3. second pass
-        // 4. output files
-
     }
     return 0;
 }

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "logger.h"
 int errorCount=0;
 
 
@@ -14,6 +14,6 @@ int get_error_count(){
 }
 
 void exit_with_error(int error, char* message){
-    printf("ERROR: %s\n",message);
+    logger(ERROR,"ERROR: %s\n",message);
     exit(error);
 }

@@ -28,3 +28,4 @@ int intToOctal(int num);
 void entryFileMaker(char* inFile);
 void externFileMaker(char* inFile);
 void objectFileMaker(char* inFile);
+void printCodeSegment();
