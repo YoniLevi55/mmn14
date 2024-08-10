@@ -405,14 +405,14 @@ void objectFileMaker(char* inFile)
     char *fileName = malloc(strlen(inFile) + 2);
     sprintf(fileName, "%s.ob", inFile);
     FILE* obFile = OpenFile(fileName, "w");
-    int codeSegmentCounter = sizeof(codeSegment);
+    int codeSegmentCounter = get_code_segment_size();
     int dataSegmentCounter = get_data_segment_size();
     fprintf(obFile, "%d %d\n", codeSegmentCounter, dataSegmentCounter);
     int counter = 0;
     for (int i = 0; i < codeSegmentCounter; i++)
     {
         counter++;
-        fprintf(obFile, "%d %d\n", counter+100, intToOctal(codeSegment[i]));
+        fprintf(obFile, "%d %05d\n", counter+100, intToOctal(codeSegment[i]));
     }
     for (int i = 0; i < dataSegmentCounter; i++)
     {

@@ -37,4 +37,5 @@ void dataSegment_add_data(int value)
     }
     dataSegment[DC] = value;
     DC++;
+    dataSegmentSize++;
 }
