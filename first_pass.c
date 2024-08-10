@@ -13,38 +13,6 @@
 #include "code_segment.h"
 #include "logger.h"
 
-void breakLine(char* line, char** label, char** operation, char** datatype, char** args) //breaks the line into label, operation, datatype and args.
-{
-    int count;
-    char** splitted = split_string(line, ' ', &count);
-    int i=0;
-    int offset = 0;
-    if (isLabel(splitted[0])){
-        *label = malloc(32);// change allocation size in future.
-        strcpy(*label, splitted[0]);
-        offset+=strlen(splitted[0]);
-        i++;
-    }
-    if (isDataType(splitted[i]) || isOperation(splitted[i]))
-    {
-        if (isDataType(splitted[i]))
-        {
-            *datatype = malloc(32); // change allocation size in future.
-            strcpy(*datatype, splitted[i]);
-            offset+=strlen(splitted[i]);
-        }
-        else
-        {
-            *operation = malloc(32); // change allocation size in future.
-            strcpy(*operation, splitted[i]);
-            offset+=strlen(splitted[i]);
-        }
-        i++;
-    }
-    *args = malloc(strlen(line) - offset);
-    strncpy(*args, &line[offset+1], strlen(line) - offset); //make sure that if data is string, return without quotes.
-}
-
 
 
 void free_if_not_null(void* ptr) //frees the memory if the pointer is not NULL.
@@ -255,94 +223,6 @@ void firstPass(char *inFile)
     set_ic_offset(get_IC()); //sets the IC offset.
 }
 
-void secondPass(char *inFile)
-{
-    int IC = 0; //instruction counter
-    code_segment** codeSegment = get_code_segment(); //get code segment
-    char *line;
-    char *fileName = malloc(strlen(inFile) + 3);
-    int count = 0;
-    int lineCount = 0;
-    sprintf(fileName, "%s.am", inFile);
-    FILE *file = OpenFile(fileName, "r");
-    while ((line = ReadLine(file)) != NULL) //reads the file line by line.
-    {
-        lineCount++;
-        char *label = NULL;
-        char *operation = NULL;
-        char *datatype = NULL;
-        char *args = NULL;
-        unsigned short value = 0;
-        breakLine(line, &label, &operation, &datatype, &args); //breaks the line into label, operation, datatype and args.
-        if (datatype != NULL)
-        {
-            bool isData = strncmp(datatype, ".data", 5) == 0;
-            bool isString = strncmp(datatype, ".string", 7) == 0;
-            bool isExtern = strncmp(datatype, ".extern", 7) == 0;
-            bool isEntry = strncmp(datatype, ".entry", 6) == 0;
-            if (isData || isString || isExtern) //checks if the datatype is data, string or extern
-            {
-                continue;
-            }
-            if (isEntry) //checks if the datatype is entry
-            {
-                char** entries = split_string(args, ' ', &count); //splits the arguments
-                for (int i = 0; i < count; i++) //loops through the arguments
-                {
-                    set_type(trimWhiteSpace(entries[i]), ".entry");
-                }
-                continue;
-            }
-        }
-        char* argOne = NULL;
-        char* argTwo = NULL;
-        split_args(args, &argOne, &argTwo); //splits the arguments
-        if (findMethod(argOne) == DIRECT && argOne != NULL) //checks if the method is direct
-        {
-            labelCoder(argOne, &value, get_symbol(argOne)->type); //label coding
-            for (int i = 0; i < get_code_segment_size(); i++)
-            {
-                if (codeSegment[i]->value == (unsigned short) -1) //checks if the value is -1
-                {
-                    codeSegment[i]->value = value; //sets the value
-                    break;
-                }
-            }
-        }
-        if (findMethod(argTwo) == DIRECT && argTwo != NULL) //checks if the method is direct
-        {
-            labelCoder(argTwo, &value, get_symbol(argTwo)->type); //label coding
-            for (int i = 0; i < get_code_segment_size(); i++)
-            {
-                if (codeSegment[i]->value == (unsigned short) -1) //checks if the value is -1
-                {
-                    codeSegment[i]->value = value; //sets the value
-                    break;
-                }
-            }
-        }
-    }
-    if (get_error_count() > 0) //checks if there are any errors
-        exit_with_error(EXIT_FAILURE, "Errors found!");
-}
-
-void entryFileMaker(char* inFile) //creates the entry file
-{
-    char *fileName = malloc(strlen(inFile) + 3);
-    sprintf(fileName, "%s.ent", inFile);
-    FILE* entFile = OpenFile(fileName, "w");
-    Label** symbol_table =  get_symbol_table(); //gets the symbol table
-    int symbol_count = get_symbol_count(); //gets the symbol count
-    for (int i = 0; i < symbol_count; i++) //loops through the symbol table
-    {
-        if (strcmp(symbol_table[i]->type, ".entry") == 0) //checks if the type is entry
-        {
-            logger(DEBUG, "Writing to entry file: %s %d\n", symbol_table[i]->name, symbol_table[i]->value); //writes to the entry file
-            fprintf(entFile, "%s %d\n", symbol_table[i]->name, symbol_table[i]->value);
-        }
-    }
-    fclose(entFile); //closes the entry file
-}
 
 void externFileMaker(char* inFile) //creates the extern file
 {
@@ -367,6 +247,23 @@ void externFileMaker(char* inFile) //creates the extern file
         }
     }
     fclose(extFile); //closes the extern file
+}
+void entryFileMaker(char* inFile) //creates the entry file
+{
+    char *fileName = malloc(strlen(inFile) + 3);
+    sprintf(fileName, "%s.ent", inFile);
+    FILE* entFile = OpenFile(fileName, "w");
+    Label** symbol_table =  get_symbol_table(); //gets the symbol table
+    int symbol_count = get_symbol_count(); //gets the symbol count
+    for (int i = 0; i < symbol_count; i++) //loops through the symbol table
+    {
+        if (strcmp(symbol_table[i]->type, ".entry") == 0) //checks if the type is entry
+        {
+            logger(DEBUG, "Writing to entry file: %s %d\n", symbol_table[i]->name, symbol_table[i]->value); //writes to the entry file
+            fprintf(entFile, "%s %d\n", symbol_table[i]->name, symbol_table[i]->value);
+        }
+    }
+    fclose(entFile); //closes the entry file
 }
 
 void objectFileMaker(char* inFile)

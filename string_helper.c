@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include "errors_handler.h"
+#include "opcode_coding.h"
 char* trimWhiteSpace(char* str)
 {
     if (str == NULL)
@@ -142,4 +143,39 @@ char *removeQuotes(const char *str)
     result[j] = '\0';
 
     return result;
+}
+
+
+
+
+void breakLine(char* line, char** label, char** operation, char** datatype, char** args) //breaks the line into label, operation, datatype and args.
+{
+    int count;
+    char** splitted = split_string(line, ' ', &count);
+    int i=0;
+    int offset = 0;
+    if (isLabel(splitted[0])){
+        *label = malloc(32);// change allocation size in future.
+        strcpy(*label, splitted[0]);
+        offset+=strlen(splitted[0]);
+        i++;
+    }
+    if (isDataType(splitted[i]) || isOperation(splitted[i]))
+    {
+        if (isDataType(splitted[i]))
+        {
+            *datatype = malloc(32); // change allocation size in future.
+            strcpy(*datatype, splitted[i]);
+            offset+=strlen(splitted[i]);
+        }
+        else
+        {
+            *operation = malloc(32); // change allocation size in future.
+            strcpy(*operation, splitted[i]);
+            offset+=strlen(splitted[i]);
+        }
+        i++;
+    }
+    *args = malloc(strlen(line) - offset);
+    strncpy(*args, &line[offset+1], strlen(line) - offset); //make sure that if data is string, return without quotes.
 }

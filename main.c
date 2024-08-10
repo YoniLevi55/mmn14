@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "file_handler.h"
 #include "macro_processor.h"
 #include "first_pass.h"
-#include <stdbool.h>
+#include "second_pass.h"
 #include "logger.h"
 #include "symbol_table.h"
 

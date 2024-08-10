@@ -5,3 +5,4 @@ bool isLabel(char *line);
 char* getLabel(char* line);
 void removeLastChar(char* str);
 char *removeQuotes(const char *str);
+void breakLine(char* line, char** label, char** operation, char** datatype, char** args);

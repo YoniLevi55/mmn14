@@ -23,7 +23,6 @@ void firstPass(char *inFile);
 unsigned short getLabelValue(char* label);
 void breakLine(char* line, char** label, char** operation, char** datatype, char** args);
 // bool isInTable(char* label);
-void secondPass(char *inFile);
 void entryFileMaker(char* inFile);
 void externFileMaker(char* inFile);
 void objectFileMaker(char* inFile);

@@ -1,0 +1,1 @@
+void secondPass(char *inFile);
