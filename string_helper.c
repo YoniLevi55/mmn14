@@ -145,9 +145,6 @@ char *removeQuotes(const char *str)
     return result;
 }
 
-
-
-
 void breakLine(char* line, char** label, char** operation, char** datatype, char** args) //breaks the line into label, operation, datatype and args.
 {
     int count;
