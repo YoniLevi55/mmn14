@@ -3,3 +3,8 @@
 *.ob
 **/a.out.dSYM/**
 a.out
+in.am
+in.ent
+in.ext
+in.ob
+mmn14-compiler
