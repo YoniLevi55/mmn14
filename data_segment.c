@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "logger.h"
 int* dataSegment = NULL;
+int dataSegmentSize = 0;
 int DC = 0;
 
 
@@ -22,7 +23,7 @@ int get_DC()
 
 int get_data_segment_size()
 {
-    return DC;
+    return dataSegmentSize;
 }
 
 void dataSegment_add_data(int value)

@@ -3,6 +3,7 @@
 #include "logger.h"
 int* codeSegment = NULL;
 int IC = 0;
+int codeSegmentSize = 0;
 
 void init_code_segment(int size){
     codeSegment = (int*)malloc(sizeof(int) * size);
@@ -17,19 +18,20 @@ int get_IC(){
 }
 
 int get_code_segment_size(){
-    return sizeof(codeSegment)*sizeof(int);
+    return codeSegmentSize;
 }
 
 void codeSegment_add_code(int value){
-    logger(DEBUG,"codeSegment:: Adding code: %d\n",value);
     if (codeSegment == NULL)
     {
         init_code_segment(1);
     }else{
         codeSegment = (int*)realloc(codeSegment, sizeof(int) * (IC+1));
     }
+    logger(DEBUG,"codeSegment:: Adding code: %d\n",value);
     codeSegment[IC] = value;
     IC++;
+    codeSegmentSize++;
 }
 
 void clear_IC(){
@@ -42,7 +44,7 @@ void printCodeSegment()
     logger(DEBUG,"Code Segment:\n");
     logger(DEBUG,"==============\n");
 
-    for (int i = 0; i < sizeof(codeSegment); i++)
+    for (int i = 0; i < codeSegmentSize; i++)
     {
         logger(DEBUG,"%d\n", codeSegment[i]);
     }
