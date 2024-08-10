@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "file_handler.h"
 #include <stdbool.h>
 #include <ctype.h>
+#include "file_handler.h"
 #include "string_helper.h"
 #include "opcode_coding.h"
 #include "errors_handler.h"
@@ -15,7 +15,6 @@
 
 void secondPass(char *inFile)
 {
-    int IC = 0; //instruction counter
     code_segment** codeSegment = get_code_segment(); //get code segment
     char *line;
     char *fileName = malloc(strlen(inFile) + 3);
