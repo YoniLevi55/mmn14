@@ -2,7 +2,17 @@
 #include <stdio.h>
 
 #include "logger.h"
+
+enum LOG_LEVEL log_level = INFO;
+
+void set_log_level(enum LOG_LEVEL level) {
+    log_level = level;
+}
+
 void logger(enum LOG_LEVEL level, char *msg, ...) {
+    if (level < log_level) {
+        return;
+    }
     va_list args;
     const char *prefix;
     const char *color;

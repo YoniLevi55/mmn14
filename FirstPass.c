@@ -79,7 +79,7 @@ void firstPass(char *inFile)
         char* argOne = NULL;
         char* argTwo = NULL;
 
-        logger(INFO, "Processing line (%d) %s",lineCount, line);
+        logger(DEBUG, "Processing line (%d) %s",lineCount, line);
         if(lineCount == 20){
             logger(DEBUG, "Breakpoint\n");
         }

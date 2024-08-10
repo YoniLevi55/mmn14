@@ -9,6 +9,7 @@
 
 int main(int argc, char *argv[])
 {
+    set_log_level(DEBUG);
     if (argc <= 1)
     {
         logger(INFO, "Usage: %s <filename>\n", argv[0]);
