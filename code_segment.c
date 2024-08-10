@@ -24,8 +24,9 @@ void codeSegment_add_code(int value){
     if (codeSegment == NULL)
     {
         init_code_segment(1);
+    }else{
+        codeSegment = (int*)realloc(codeSegment, sizeof(int) * (IC+1));
     }
-    codeSegment = (int*)realloc(codeSegment, sizeof(int) * (IC+1));
     codeSegment[IC] = value;
     IC++;
 }

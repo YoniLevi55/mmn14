@@ -29,8 +29,9 @@ void dataSegment_add_data(int value)
     if (dataSegment == NULL)
     {
         init_data_segment(1);
+    } else {
+        dataSegment = (int*)realloc(dataSegment, sizeof(int) * (DC+1));
     }
-    dataSegment = (int*)realloc(dataSegment, sizeof(int) * (DC+1));
     dataSegment[DC] = value;
     DC++;
 }

@@ -165,6 +165,7 @@ void firstPass(char *inFile)
                     free_if_not_null(argTwo);
                     continue;
                 }
+                //TODO: Implement entry
                 free_if_not_null(label);
                 free_if_not_null(operation);
                 free_if_not_null(datatype);

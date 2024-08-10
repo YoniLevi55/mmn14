@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
         logger(INFO, "Usage: %s <filename>\n", argv[0]);
         return 1;
     }
+    //TODO: need to loop all files in first pass and only then loop all files again in second pass
     for (int i = 1; i < argc; i++)
     {
         char *filename = argv[i];
