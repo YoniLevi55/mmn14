@@ -153,7 +153,7 @@ void split_args(const char* args, char** argOne, char** argTwo) {
     if (count == 1)
     {
         *argOne = malloc(strlen(splitted[0]));
-        strcpy(*argOne, splitted[0]);
+        strcpy(*argOne, trimWhiteSpace(splitted[0]));
     }
     else if (count == 2)
     {
@@ -200,12 +200,12 @@ void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo)
     if (findMethod(argOne) == IMMEDIATE)
     {
         int value = atoi(&argOne[1]);
-        *codeOne = (ABSOLUTE | (value << 6));
+        *codeOne = (ABSOLUTE | (value << 3));
     }
     if (findMethod(argTwo) == IMMEDIATE)
     {
         int value = atoi(&argTwo[1]);
-        *codeTwo = (ABSOLUTE | (value << 6));
+        *codeTwo = (ABSOLUTE | (value << 3));
     }
     if (findMethod(argOne) == DIRECT)
     {
@@ -267,11 +267,11 @@ void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo)
         }
         *codeOne = (ABSOLUTE | (value << 6) | (value2 << 3));
     }
-    else if (argOne == NULL)
+    if (argOne == NULL)
     {
         *codeOne = 0;
     }
-    else if (argTwo == NULL)
+    if (argTwo == NULL)
     {
         *codeTwo = 0;
     }

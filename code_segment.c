@@ -21,6 +21,7 @@ int get_code_segment_size(){
 }
 
 void codeSegment_add_code(int value){
+    logger(DEBUG,"codeSegment:: Adding code: %d\n",value);
     if (codeSegment == NULL)
     {
         init_code_segment(1);

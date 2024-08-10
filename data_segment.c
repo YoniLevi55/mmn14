@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "logger.h"
 int* dataSegment = NULL;
 int DC = 0;
 
@@ -15,7 +15,8 @@ void init_data_segment(int size)
     dataSegment = (int*)malloc(sizeof(int) * size);
 }
 
-int get_DC(){
+int get_DC()
+{
     return DC;
 }
 
@@ -26,6 +27,7 @@ int get_data_segment_size()
 
 void dataSegment_add_data(int value)
 {
+    logger(DEBUG,"dataSegment:: Adding data: %d\n",value);
     if (dataSegment == NULL)
     {
         init_data_segment(1);

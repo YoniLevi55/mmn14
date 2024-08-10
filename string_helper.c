@@ -50,7 +50,7 @@ int findFirstSign(char *line, char sign)
 char** split_string(const char* str, const char delimiter, int* count) {
     int length = strlen(str);
     int token_count = 0;
-    
+
     // First pass to count the number of tokens
     for (int i = 0; i < length; i++) {
         if (str[i] == delimiter) {
@@ -117,4 +117,27 @@ void removeLastChar(char* str) {
     if (length > 0) {
         str[length - 1] = '\0';  // Set the last character to null terminator
     }
+}
+
+char *removeQuotes(const char *str) {
+    int length = strlen(str);
+    char *result = (char *)malloc(length + 1); // Allocate memory for the new string
+    if (result == NULL) {
+        printf("Memory allocation failed\n");
+        exit(1); // Exit if memory allocation fails
+    }
+
+    int j = 0;
+
+    // Traverse the string and copy characters that are not quotes
+    for (int i = 0; i < length; i++) {
+        if (str[i] != '"') {
+            result[j++] = str[i];
+        }
+    }
+
+    // Null-terminate the new string
+    result[j] = '\0';
+
+    return result;
 }

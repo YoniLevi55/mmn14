@@ -138,6 +138,8 @@ void firstPass(char *inFile)
                 }
                 else if (isString)
                 {
+                    args = trimWhiteSpace(args);
+                    args = removeQuotes(args);
                     for (int i = 0; i < strlen(args); i++)
                     {
                         dataSegment_add_data(args[i]);
@@ -213,7 +215,6 @@ void firstPass(char *inFile)
         {
             L = 1;
         }
-        
         // codeSegment = realloc(codeSegment, (IC + L + 1) * sizeof(int)); //error
         operandCoder(argOne, argTwo, &codeOne, &codeTwo);
         int codeCount = 0;
@@ -240,7 +241,7 @@ void firstPass(char *inFile)
                 // codeSegment[IC + 1] = codeOne;
                 break;
             case 2:
-                if (findMethod(argOne)==  DIRECT)
+                if (findMethod(argOne) == DIRECT && findMethod(argTwo) != DIRECT)
                 {
                     codeSegment_add_code(0);
                     codeSegment_add_code(codeTwo);
@@ -248,7 +249,7 @@ void firstPass(char *inFile)
                     // codeSegment[IC + 2] = codeTwo;
                     break;
                 }
-                else if (findMethod(argTwo) == DIRECT)
+                else if (findMethod(argTwo) == DIRECT && findMethod(argOne) != DIRECT)
                 {
                     codeSegment_add_code(codeOne);
                     codeSegment_add_code(0);
