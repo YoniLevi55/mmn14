@@ -398,7 +398,7 @@ void externFileMaker(char* inFile)
 
 void objectFileMaker(char* inFile)
 {
-    int *dataSegment = get_data_segment();
+    unsigned short *dataSegment = get_data_segment();
     code_segment** codeSegment = get_code_segment();
     char *fileName = malloc(strlen(inFile) + 2);
     sprintf(fileName, "%s.ob", inFile);
@@ -414,7 +414,7 @@ void objectFileMaker(char* inFile)
     }
     for (int i = 0; i < dataSegmentCounter; i++)
     {
-        fprintf(obFile, "%d %o\n", counter+100, dataSegment[i]);
+        fprintf(obFile, "%d %05o\n", counter+100, dataSegment[i] & 0x7FFF);
         counter++;
     }
     fclose(obFile);
