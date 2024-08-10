@@ -12,38 +12,45 @@
 char *symbolNames = NULL;
 int macroCount = 0;
 
-bool isMacro(char* line) //checking if the line is a macro.
+bool isMacro(char* line) /*checking if the line is a macro.*/
 {
     char* trimmedLine = trimWhiteSpace(line);
     return strncmp(trimmedLine, "macr", 4) == 0;
 }
 
-Macro* macroExists(char* line) //checking if the macro exists already in the macros array.
+Macro* macroExists(char* line) /*checking if the macro exists already in the macros array.*/
 {
+    int i;
     char* trimmedLine = trimWhiteSpace(line);
-    for (int i = 0; i < macroCount; i++)
+    for (i = 0; i < macroCount; i++)
         if (strncmp(trimmedLine, macros[i]->Name, strlen(macros[i]->Name)) == 0)
-            return macros[i]; //returning the macro if it exists.
-    return NULL; //returning NULL if the macro does not exist.
+            return macros[i]; /*returning the macro if it exists.*/
+    return NULL; /*returning NULL if the macro does not exist.*/
 }
 
-void preProcessFile(char* inputFile) //processing the initial input file.
+void preProcessFile(char* inputFile) /*processing the initial input file.*/
 {
-    bool macroFound = false; //FLAG!
+    int j = 0;
+    int i = 0;
+    FILE* inFile;
+    FILE* outFile;
+    char* line;
+    int labels = 0;
+    int errorCount = 0;
+    Macro* currentMacro; /*creating a pointer to the current macro.*/
+
+
+    bool macroFound = false; /*FLAG!*/
     char *fileName = malloc(strlen(inputFile) + 3);
     char *outputFile = malloc(strlen(inputFile) + 3);
     sprintf(outputFile, "%s.am", inputFile);
     sprintf(fileName, "%s.as", inputFile);
-    FILE* inFile = OpenFile(fileName, "r"); //opening the input file for reading.
-    FILE* outFile = OpenFile(outputFile, "w"); //creating the output file for writing.
-    char* line;
-    int i = 0;
-    int labels = 0;
-    int errorCount = 0;
-    Macro* currentMacro; //creating a pointer to the current macro.
+    inFile = OpenFile(fileName, "r"); /*opening the input file for reading.*/
+    outFile = OpenFile(outputFile, "w"); /*creating the output file for writing.*/
+    
     while ((line = ReadLine(inFile)) != NULL)
     {
-        line = trimWhiteSpace(line); //trimming white space from the beginning of the line.
+        line = trimWhiteSpace(line); /*trimming white space from the beginning of the line.*/
         if (isLabel(line))
         {
             int count = 0;
@@ -61,9 +68,9 @@ void preProcessFile(char* inputFile) //processing the initial input file.
                 labels++;
             }
         }
-        if (isMacro(line)) //checking if the line is a macro.
+        if (isMacro(line)) /*checking if the line is a macro.*/
         {
-            if (macroCount == 0) //allocating memory for the macros array.
+            if (macroCount == 0) /*allocating memory for the macros array.*/
             {
                 macros = malloc(sizeof(Macro*));
                 macros[0] = malloc(sizeof(Macro));
@@ -82,9 +89,9 @@ void preProcessFile(char* inputFile) //processing the initial input file.
             else
                 strncpy(macros[macroCount - 1]->Name, line + 5, strlen(line) - 5);
         }
-        else if (macroFound) //checking if the macro is found.
+        else if (macroFound) /*checking if the macro is found.*/
         {
-            if (strncmp(line, "endmacr", 7) == 0) //checking if the end of the macro is found.
+            if (strncmp(line, "endmacr", 7) == 0) /*checking if the end of the macro is found.*/
             {
                 macroFound = 0;
                 i = 0;
@@ -101,23 +108,23 @@ void preProcessFile(char* inputFile) //processing the initial input file.
                 i++;
             }
         }
-        else if((currentMacro = macroExists(line)) != NULL) //checking if the macro exists in the database already.
+        else if((currentMacro = macroExists(line)) != NULL) /*checking if the macro exists in the database already.*/
         {
             logger(DEBUG, "Macro found: %s\n", currentMacro->Name);
             logger(DEBUG, "Expanding macro...\n");
             logger(DEBUG, "Writing to output file...\n");
             logger(DEBUG, "Macro size: %d\n", currentMacro->LineCount);
-            for (int i = 0; i < currentMacro->LineCount; i++) //printing the macro to the output file.
+            for (i = 0; i < currentMacro->LineCount; i++) /*printing the macro to the output file.*/
                 fprintf(outFile, "%s", currentMacro->Body[i]);
         }
         else
         {
-            fprintf(outFile, "%s\n", line); //printing the line to the output file (if it is not a macro).
+            fprintf(outFile, "%s\n", line); /*printing the line to the output file (if it is not a macro).*/
         }
     }
-    for (int i = 0; i < macroCount; i++) //freeing the memory allocated for the macros.
+    for (i = 0; i < macroCount; i++) /*freeing the memory allocated for the macros.*/
     {
-        for (int j = 0; j < labels; j++)
+        for (j = 0; j < labels; j++)
         {
             if (macros[i]->Name == &symbolNames[j])
             {
@@ -135,6 +142,6 @@ void preProcessFile(char* inputFile) //processing the initial input file.
     {
         exit_with_error(1, "Errors found. Exiting...\n");
     }
-    fclose(inFile); //closing the input file.
-    fclose(outFile); //closing the output file.
+    fclose(inFile); /*closing the input file.*/
+    fclose(outFile); /*closing the output file.*/
 }

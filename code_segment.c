@@ -8,35 +8,40 @@ code_segment** codeSegment = NULL;
 int IC = 0;
 int codeSegmentSize = 0;
 
-void init_code_segment() //init code segment
+/* init code segment */
+void init_code_segment() 
 {
 
     codeSegment = malloc(sizeof(code_segment*));
     codeSegment[0] = (code_segment*)malloc(sizeof(code_segment));
 }
 
-code_segment** get_code_segment() //get code segment
+/* get code segment */
+code_segment** get_code_segment() 
 {
     return codeSegment;
 }
 
-int get_IC() //get IC
+/* get IC */
+int get_IC() 
 {
     return IC;
 }
 
-int get_code_segment_size() //get code segment size
+/* get code segment size */
+int get_code_segment_size() 
 {
     return codeSegmentSize;
 }
 
-void codeSegment_add_code(unsigned short value, char* name) //add code to code segment
+/* add code to code segment */
+void codeSegment_add_code(unsigned short value, char* name) 
 {
-    if (codeSegment == NULL) //if code segment is null
+    if (codeSegment == NULL) 
     {
         init_code_segment();
     }
-    else //if code segment is not null
+    else
     {
         codeSegment = realloc(codeSegment, sizeof(code_segment*) * (IC+1));
         codeSegment[IC] = malloc(sizeof(code_segment) );
@@ -53,11 +58,12 @@ void codeSegment_add_code(unsigned short value, char* name) //add code to code s
 
 void printCodeSegment()
 {
+    int i = 0;
     logger(DEBUG,"--------------------\n");
     logger(DEBUG,"Code Segment:\n");
     logger(DEBUG,"==============\n");
 
-    for (int i = 0; i < codeSegmentSize; i++)
+    for (i = 0; i < codeSegmentSize; i++)
     {
         logger(DEBUG,"(%d)%d\n",i, codeSegment[i]->value);
     }

@@ -8,7 +8,7 @@ enum ARE
 {
     ABSOLUTE = 4,
     EXTERNAL = 1,
-    RELOCATABLE = 2,
+    RELOCATABLE = 2
 };
 
 enum METHODS
@@ -16,9 +16,29 @@ enum METHODS
     IMMEDIATE = 1,
     DIRECT = 2,
     REGISTER_INDIRECT = 4,
-    REGISTER_DIRECT = 8,
+    REGISTER_DIRECT = 8
 };
 
+enum OPCODES /* enum for the opcodes */
+{
+    OP_MOV = 0,
+    OP_CMP,
+    OP_ADD,
+    OP_SUB,
+    OP_LEA,
+    OP_CLR,
+    OP_NOT,
+    OP_INC,
+    OP_DEC,
+    OP_JMP,
+    OP_BNE,
+    OP_RED,
+    OP_PRN,
+    OP_JSR,
+    OP_RTS,
+    OP_STOP,
+    OP_UNKNOWN = -1
+};
 
 bool isDataType(char* line);
 bool isOperation(char* line);

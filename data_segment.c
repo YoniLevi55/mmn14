@@ -6,33 +6,33 @@ int dataSegmentSize = 0;
 int DC = 0;
 
 
-unsigned short* get_data_segment() //get data segment
+unsigned short* get_data_segment()
 {
     return dataSegment;
 }
 
-void init_data_segment(int size) //init data segment
+void init_data_segment(int size)
 {
     dataSegment = (unsigned short*)malloc(sizeof(unsigned short) * size);
 }
 
-int get_DC() //get DC
+int get_DC()
 {
     return DC;
 }
 
-int get_data_segment_size() //get data segment size
+int get_data_segment_size()
 {
     return dataSegmentSize;
 }
 
-void dataSegment_add_data(unsigned short value) //add data to data segment
+void dataSegment_add_data(unsigned short value) /*add data to data segment*/
 {
-    if (dataSegment == NULL) //if data segment is null
+    if (dataSegment == NULL)
     {
         init_data_segment(1);
     }
-    else //if data segment is not null
+    else
     {
         dataSegment = (unsigned short*)realloc(dataSegment, sizeof(unsigned short) * (DC+1));
     }

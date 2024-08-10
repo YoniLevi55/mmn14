@@ -12,36 +12,37 @@
 
 int main(int argc, char *argv[])
 {
+    int i=0;
     set_log_level(INFO);
     if (argc <= 1)
     {
         logger(INFO, "Usage: %s <filename>\n", argv[0]);
         return 1;
     }
-    // pre processing input files (expand macros)
-    for (int i = 1; i < argc; i++)
+    /* pre processing input files (expand macros) */
+    for (i = 1; i < argc; i++)
     {
         char *filename = argv[i];
         logger(INFO, "Pre Processing file: %s\n", filename);
         preProcessFile(filename);
     }
-    // run first pass on pre processes files
-    for (int i = 1; i < argc; i++)
+    /* run first pass on pre processes files */
+    for ( i = 1; i < argc; i++)
     {
         char *filename = argv[i];
         logger(INFO, "calling firstPass for file: %s\n", filename);
         firstPass(filename);
     }
-    // run second pass
-    for (int i = 1; i < argc; i++)
+    /* run second pass */
+    for (i = 1; i < argc; i++)
     {
         char *filename = argv[i];
         logger(INFO, "calling secondPass for file: %s\n", filename);
         secondPass(filename);
         logger(INFO, "calling entryFileMaker for file: %s\n", filename);
     }
-    // create object, entry and extern files
-    for (int i = 1; i < argc; i++){
+    /* create object, entry and extern files */
+    for (i = 1; i < argc; i++){
         char *filename = argv[i];
         entryFileMaker(filename);
         logger(INFO, "calling externFileMaker for file: %s\n", filename);

@@ -9,8 +9,8 @@ Label** symbol_table;
 int symbol_count = 0;
 
 void add_symbol(char* name, unsigned short value, char* type){
-    logger(DEBUG,"Adding symbol: %s, value: %d, type: %s\n",name, value, type);
     Label* newLabel = (Label*)malloc(sizeof(Label));
+    logger(DEBUG,"Adding symbol: %s, value: %d, type: %s\n",name, value, type);
     newLabel->name = malloc(strlen(name)+1);
     newLabel->type = malloc(strlen(type)+1);
     newLabel->value = value;
@@ -23,6 +23,7 @@ void add_symbol(char* name, unsigned short value, char* type){
 
 bool is_symbol_exist(char *symbol){
 {
+    int i=0;
     if (symbol == NULL)
     {
         return false;
@@ -31,7 +32,7 @@ bool is_symbol_exist(char *symbol){
     {
         return false;
     }
-    for (int i = 0; i < symbol_count; i++)
+    for (i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->name, symbol) == 0)
         {
@@ -47,7 +48,8 @@ int get_symbol_count(){
 }
 
 Label* get_symbol(char *symbol){
-    for (int i = 0; i < symbol_count; i++)
+    int i=0;
+    for (i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->name, symbol) == 0)
         {
@@ -60,7 +62,8 @@ Label* get_symbol(char *symbol){
 
 unsigned short getLabelValue(char* label)
 {
-    for (int i = 0; i < sizeof(symbol_table); i++)
+    int i=0;
+    for (i = 0; i < sizeof(symbol_table); i++)
     {
         if (strcmp(symbol_table[i]->name, label) == 0)
         {
@@ -71,7 +74,8 @@ unsigned short getLabelValue(char* label)
 }
 
 void set_ic_offset(unsigned short offset){
-    for (int i = 0; i < symbol_count; i++)
+    int i=0;
+    for (i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->type, ".data") == 0)
             symbol_table[i]->value += offset + 100;
@@ -79,7 +83,8 @@ void set_ic_offset(unsigned short offset){
 }
 
 void set_type(char *symbol, char* type){
-    for (int i = 0; i < symbol_count; i++)
+    int i=0;
+    for (i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->name, symbol) == 0)
         {
@@ -90,9 +95,10 @@ void set_type(char *symbol, char* type){
 }
 
 void print_symbol_table(){
+    int i=0;
     logger(DEBUG,"Symbol Table:\n");
     logger(DEBUG,"size: %d\n", symbol_count);
-    for (int i = 0; i < symbol_count; i++)
+    for ( i = 0; i < symbol_count; i++)
     {
         logger(DEBUG,"Name: %s, Value: %d, Type: %s\n", symbol_table[i]->name, symbol_table[i]->value, symbol_table[i]->type);
     }

@@ -15,7 +15,7 @@
 
 
 
-void free_if_not_null(void* ptr) //frees the memory if the pointer is not NULL.
+void free_if_not_null(void* ptr) /*frees the memory if the pointer is not NULL.*/
 {
     if (ptr != NULL)
     {
@@ -26,14 +26,18 @@ void free_if_not_null(void* ptr) //frees the memory if the pointer is not NULL.
 void firstPass(char *inFile)
 {
     char *line;
+    char* trimmedLine;
+    int i=0;
+    FILE *file;
+    int lineCount = 0;
+    int codeCount = 0;
     char *fileName = malloc(strlen(inFile) + 3);
     sprintf(fileName, "%s.am", inFile);
-    FILE *file = OpenFile(fileName, "r");
+    file = OpenFile(fileName, "r");
 
-    int lineCount = 0;
-    while ((line = ReadLine(file)) != NULL) //reads the file line by line.
+    while ((line = ReadLine(file)) != NULL) /*reads the file line by line.*/
     {
-        bool labelFound = false; //FLAG!
+        bool labelFound = false; /*FLAG!*/
         bool isEntry = false;
         bool isExtern = false;
         bool isData = false;
@@ -44,22 +48,25 @@ void firstPass(char *inFile)
         char *args = NULL;
         char* argOne = NULL;
         char* argTwo = NULL;
+        unsigned short opcodeCode = 0;
+        unsigned short codeOne = 0;
+        unsigned short codeTwo = 0;
 
         lineCount++;
-        char* trimmedLine = trimWhiteSpace(line);
-        if (strlen(trimmedLine) > MAX_LINE_LENGTH) //checks if the line is too long.
+        trimmedLine = trimWhiteSpace(line);
+        if (strlen(trimmedLine) > MAX_LINE_LENGTH) /*checks if the line is too long.*/
         {
             set_error(line, "Line is too long");
         }
         breakLine(trimmedLine, &label, &operation, &datatype, &args);
-        if (trimmedLine[0] == '\n' || trimmedLine[0] == ';') //checks if the line is empty or a comment.
-            continue; //ignores and skips the line if it is empty or a comment.
-        if (label != NULL) //checks if the line is a label.
+        if (trimmedLine[0] == '\n' || trimmedLine[0] == ';') /*checks if the line is empty or a comment.*/
+            continue; /*ignores and skips the line if it is empty or a comment.*/
+        if (label != NULL) /*checks if the line is a label.*/
         {
             labelFound = true;
             removeLastChar(label);
         }
-        if (labelFound && is_symbol_exist(label)) //checks if the label already exists in the symbol table.
+        if (labelFound && is_symbol_exist(label)) /*checks if the label already exists in the symbol table.*/
         {
             set_error(line, "Label already defined");
         }
@@ -70,14 +77,14 @@ void firstPass(char *inFile)
             isExtern = strncmp(datatype, ".extern", 7) == 0;
             isEntry = strncmp(datatype, ".entry", 6) == 0;
 
-            if (labelFound && (isEntry || isExtern)) //checks if the label is an entry or an extern.
+            if (labelFound && (isEntry || isExtern)) /*checks if the label is an entry or an extern.*/
             {
                 logger(WARNING, "Label will be ignored.");
                 continue;
             }
-            if ((datatype != NULL) && (isData || isString)) //checks if the label is an data or a string.
+            if ((datatype != NULL) && (isData || isString)) /*checks if the label is an data or a string.*/
             {
-                if(labelFound) //checks if a label was found.
+                if(labelFound) /*checks if a label was found.*/
                 {
                     if (is_symbol_exist(label))
                     {
@@ -88,20 +95,20 @@ void firstPass(char *inFile)
                         add_symbol(label, get_DC(), ".data");
                     }
                 }
-                if (isData) //data coding into array
+                if (isData) /*data coding into array*/
                 {
                     int count = 0;
                     char** data = split_string(args, ',', &count);
-                    for (int i = 0; i < count; i++)
+                    for (i = 0; i < count; i++)
                     {
                         dataSegment_add_data(atoi(data[i]));
                     }
                 }
-                else if (isString) //string coding into array
+                else if (isString) /*string coding into array*/
                 {
                     args = trimWhiteSpace(args);
                     args = removeQuotes(args);
-                    for (int i = 0; i < strlen(args); i++)
+                    for (i = 0; i < strlen(args); i++)
                     {
                         dataSegment_add_data(args[i]);
                     }
@@ -109,13 +116,13 @@ void firstPass(char *inFile)
                     continue;
                 }
             }
-            else if (isEntry || isExtern) //entry or extern coding into array
+            else if (isEntry || isExtern) /*entry or extern coding into array*/
             {
-                if (isExtern) //extern coding into array
+                if (isExtern) /*extern coding into array*/
                 {
                     int count = 0;
                     char** outLabels = split_string(args, ' ', &count);
-                    for (int i = 0; i < count; i++)
+                    for (i = 0; i < count; i++)
                     {
                         add_symbol(outLabels[i], 0, ".extern");
                     }
@@ -138,9 +145,9 @@ void firstPass(char *inFile)
             }
             continue;
         }
-        if (labelFound) //checks if a label was found.
+        if (labelFound) /*checks if a label was found.*/
         {
-            if(is_symbol_exist(label)) //checks if the label already exists in the symbol table.
+            if(is_symbol_exist(label)) /*checks if the label already exists in the symbol table.*/
             {
                 set_error(line, "Label already exists in table.");
             }
@@ -150,21 +157,21 @@ void firstPass(char *inFile)
             }
         }
 
-        if (operation == NULL && datatype == NULL) //checks if the operation name is valid.
+        if (operation == NULL && datatype == NULL) /*checks if the operation name is valid.*/
         {
             set_error(line, "Operation name incorrect.");
         }
-        unsigned short opcodeCode = opcode_coder(operation, args); //opcode coding.
-        unsigned short codeOne = 0;
-        unsigned short codeTwo = 0;
-        split_args(args, &argOne, &argTwo); //splitting the arguments.
-        if (validator(operation, argOne, argTwo) == false) //checks if the arguments are valid.
+        opcodeCode = opcode_coder(operation, args); /*opcode coding.*/
+        codeOne = 0;
+        codeTwo = 0;
+        split_args(args, &argOne, &argTwo); /*splitting the arguments.*/
+        if (validator(operation, argOne, argTwo) == false) /*checks if the arguments are valid.*/
         {
             set_error(line, "Invalid arguments to opcode name");
         }
-        codeSegment_add_code(opcodeCode, operation); //adding the opcode to the code segment.
-        operandCoder(argOne, argTwo, &codeOne, &codeTwo); //operand coding.
-        int codeCount = 0;
+        codeSegment_add_code(opcodeCode, operation); /*adding the opcode to the code segment.*/
+        operandCoder(argOne, argTwo, &codeOne, &codeTwo); /*operand coding.*/
+        codeCount = 0;
         if (codeOne != 0)
         {
             codeCount++;
@@ -173,7 +180,7 @@ void firstPass(char *inFile)
         {
             codeCount++;
         }
-        switch (codeCount) //adding the operands to the code segment.
+        switch (codeCount) /*adding the operands to the code segment.*/
         {
             case 0:
                 break;
@@ -216,10 +223,10 @@ void firstPass(char *inFile)
         free_if_not_null(argTwo);
         labelFound = false;
     }
-    if (get_error_count() > 0) //checks if there are any errors.
+    if (get_error_count() > 0) /*checks if there are any errors.*/
     {
         exit_with_error(EXIT_FAILURE, "Errors found in file." );
     }
-    set_ic_offset(get_IC()); //sets the IC offset.
+    set_ic_offset(get_IC()); /*sets the IC offset.*/
 }
 
