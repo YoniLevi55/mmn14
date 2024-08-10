@@ -5,7 +5,7 @@ int errorCount=0;
 
 
 void set_error(char* line, char* message){
-    printf("ERROR: %s ,line: %s\n",message, line);
+    logger(ERROR,"%s ,line: %s\n",message, line);
     errorCount++;
 }
 

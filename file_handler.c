@@ -1,14 +1,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "errors_handler.h"
 #define MAX_LINE_LENGTH 80
 
 FILE* OpenFile(const char *filename, const char *mode){
     FILE *file = fopen(filename, mode);
     if(file == NULL){
-        fprintf(stderr, "Error: Could not open file %s\n", filename);
-        exit(1);
+        exit_with_error(1, "Could not open file");
     }
     return file;
 }

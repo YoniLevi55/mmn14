@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdbool.h>
-
+#include "errors_handler.h"
 char* trimWhiteSpace(char* str)
 {
     if (str == NULL)
@@ -24,8 +24,7 @@ char* trimWhiteSpace(char* str)
     // Allocate memory for the trimmed string
     char* result = malloc(end - str + 2);
     if (result == NULL) {
-        perror("Failed to allocate memory");
-        exit(EXIT_FAILURE);
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
     }
 
     // Copy the trimmed string
@@ -63,8 +62,7 @@ char** split_string(const char* str, const char delimiter, int* count) {
     // Allocate memory for the array of strings
     char** tokens = (char**)malloc(token_count * sizeof(char*));
     if (tokens == NULL) {
-        perror("Unable to allocate memory");
-        exit(EXIT_FAILURE);
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
     }
 
     // Allocate memory and copy each token
@@ -75,8 +73,7 @@ char** split_string(const char* str, const char delimiter, int* count) {
             int token_length = i - start;
             tokens[token_index] = (char*)malloc((token_length + 1) * sizeof(char));
             if (tokens[token_index] == NULL) {
-                perror("Unable to allocate memory");
-                exit(EXIT_FAILURE);
+                exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
             }
             strncpy(tokens[token_index], str + start, token_length);
             tokens[token_index][token_length] = '\0';

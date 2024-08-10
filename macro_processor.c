@@ -6,7 +6,8 @@
 #include <stdbool.h>
 #include "string_helper.h"
 #include "FirstPass.h"
-
+#include "logger.h"
+#include "errors_handler.h"
 char *symbolNames = NULL;
 int macroCount = 0;
 
@@ -101,10 +102,10 @@ void preProcessFile(char* inputFile) //processing the initial input file.
         }
         else if((currentMacro = macroExists(line)) != NULL) //checking if the macro exists in the database already.
         {
-            printf("Macro found: %s\n", currentMacro->Name);
-            printf("Expanding macro...\n");
-            printf("Writing to output file...\n");
-            printf("Macro size: %d\n", currentMacro->LineCount);
+            logger(DEBUG, "Macro found: %s\n", currentMacro->Name);
+            logger(DEBUG, "Expanding macro...\n");
+            logger(DEBUG, "Writing to output file...\n");
+            logger(DEBUG, "Macro size: %d\n", currentMacro->LineCount);
             for (int i = 0; i < currentMacro->LineCount; i++) //printing the macro to the output file.
                 fprintf(outFile, "%s", currentMacro->Body[i]);
         }
@@ -119,15 +120,14 @@ void preProcessFile(char* inputFile) //processing the initial input file.
         {
             if (macros[i]->Name == &symbolNames[j])
             {
-                printf("Error: Macro name conflicts with label name.\n");
+                logger(ERROR, "Error: Macro name conflicts with label name.\n");
                 errorCount++;
             }
         }
     }
     if (errorCount > 0)
     {
-        printf("Errors found. Exiting...\n");
-        exit(1);
+        exit_with_error(1, "Errors found. Exiting...\n");
     }
     fclose(inFile); //closing the input file.
     fclose(outFile); //closing the output file.
