@@ -8,6 +8,7 @@
 #include "second_pass.h"
 #include "logger.h"
 #include "symbol_table.h"
+#include "output_generator.h"
 
 int main(int argc, char *argv[])
 {
