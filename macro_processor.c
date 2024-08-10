@@ -8,6 +8,7 @@
 #include "FirstPass.h"
 #include "logger.h"
 #include "errors_handler.h"
+#include "opcode_coding.h"
 char *symbolNames = NULL;
 int macroCount = 0;
 
@@ -121,6 +122,11 @@ void preProcessFile(char* inputFile) //processing the initial input file.
             if (macros[i]->Name == &symbolNames[j])
             {
                 logger(ERROR, "Error: Macro name conflicts with label name.\n");
+                errorCount++;
+            }
+            if(isOperation(macros[i]->Name))
+            {
+                logger(ERROR, "Error: Macro name conflicts with operation name.\n");
                 errorCount++;
             }
         }

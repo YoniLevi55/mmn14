@@ -7,7 +7,7 @@
 #include "FirstPass.h"
 #include "opcode_coding.h"
 
-enum OPCODES
+enum OPCODES //enum for the opcodes
 {
     OP_MOV = 0,
     OP_CMP,
@@ -28,7 +28,7 @@ enum OPCODES
     OP_UNKNOWN = -1,
 };
 
-typedef struct { char *key; int val; } t_symstruct;
+typedef struct { char *key; int val; } t_symstruct; //struct for the opcodes
 
 t_symstruct opcodes[] = {
     { "mov", OP_MOV },
@@ -52,7 +52,7 @@ t_symstruct opcodes[] = {
 
 #define NKEYS (sizeof(opcodes)/sizeof(t_symstruct)-1)
 
-enum OPCODES keyfromstring(char *key)
+enum OPCODES keyfromstring(char *key) //get the opcode from the string
 {
     // printf("key: %s\n", key);
     if (key == NULL){
@@ -69,19 +69,19 @@ enum OPCODES keyfromstring(char *key)
 }
 
 
-#define OPCODE_OFFSET 11
-#define ORIGIN_METHOD_OFFSET 7
-#define DESTINATION_METHOD_OFFSET 3
-#define ARE_OFFSET 0
+#define OPCODE_OFFSET 11 //opcode offset
+#define ORIGIN_METHOD_OFFSET 7 //origin method offset
+#define DESTINATION_METHOD_OFFSET 3 //destination method offset
+#define ARE_OFFSET 0 //ARE offset
 
-bool isOperation(char* line)
+bool isOperation(char* line) //checks if the line is an operation
 {
     char* trimmedLine = trimWhiteSpace(line);
 
     return (keyfromstring(trimmedLine)!= OP_UNKNOWN);
 }
 
-bool isDataType(char* line)
+bool isDataType(char* line) //checks if the line is a data type
 {
     char* trimmedLine = trimWhiteSpace(line);
     if (strcmp(trimmedLine, ".data") == 0 || strcmp(trimmedLine, ".string") == 0 || strcmp(trimmedLine, ".extern") == 0 || strcmp(trimmedLine, ".entry") == 0)
@@ -91,7 +91,7 @@ bool isDataType(char* line)
         return false;
 }
 
-bool is_number(const char* str)
+bool is_number(const char* str) //checks if the string is a number
 {
     if (*str == '-' || *str == '+') {
         str++;
@@ -108,7 +108,7 @@ bool is_number(const char* str)
     return true;
 }
 
-bool is_number_with_hash(const char* str)
+bool is_number_with_hash(const char* str) //checks if the string is a number with a hash
 {
     if (str == NULL) {
         return false;
@@ -120,7 +120,7 @@ bool is_number_with_hash(const char* str)
     return is_number(str);
 }
 
-bool is_operand(const char* str)
+bool is_operand(const char* str) //checks if the string is an operand
 {
    if ((str != NULL) && (strcmp(str, "r1") == 0 || strcmp(str, "r2") == 0 || strcmp(str, "r3") == 0 || strcmp(str, "r4") == 0 || strcmp(str, "r5") == 0 || strcmp(str, "r6") == 0 || strcmp(str, "r7") == 0 || strcmp(str, "r0") == 0))
    {
@@ -129,7 +129,7 @@ bool is_operand(const char* str)
    return false;
 }
 
-bool is_dereferenced_operand(const char* str)
+bool is_dereferenced_operand(const char* str) //checks if the string is a dereferenced operand
 {
     if (str == NULL) {
         return false;
@@ -141,21 +141,22 @@ bool is_dereferenced_operand(const char* str)
     return is_operand(str);
 }
 
-void split_args(const char* args, char** argOne, char** argTwo) {
-    if (args == NULL || strcmp(args, "") == 0)
+void split_args(const char* args, char** argOne, char** argTwo) //splits the arguments
+{
+    if (args == NULL || strcmp(args, "") == 0) //if there are no arguments
     {
         *argOne = NULL;
         *argTwo = NULL;
         return;
     }
     int count = 0;
-    char** splitted = split_string(args, ',', &count);
-    if (count == 1)
+    char** splitted = split_string(args, ',', &count); //splits the arguments by the comma
+    if (count == 1) //if there is one argument
     {
         *argOne = malloc(strlen(splitted[0]));
         strcpy(*argOne, trimWhiteSpace(splitted[0]));
     }
-    else if (count == 2)
+    else if (count == 2) //if there are two arguments
     {
         *argOne = malloc(strlen(splitted[0]));
         *argTwo = malloc(strlen(splitted[1]));
@@ -164,7 +165,7 @@ void split_args(const char* args, char** argOne, char** argTwo) {
     }
 }
 
-int getNumOfArgs(const char* args)
+int getNumOfArgs(const char* args) //gets the number of arguments
 {
     int count = 0;
     char** splitted = split_string(args, ',', &count);
@@ -173,7 +174,7 @@ int getNumOfArgs(const char* args)
 
 
 
-enum METHODS findMethod(char* arg)
+enum METHODS findMethod(char* arg) //finds the method of a given argument.
 {
     if (is_number_with_hash(arg))
     {
@@ -193,7 +194,7 @@ enum METHODS findMethod(char* arg)
     }
 }
 
-unsigned short AtoUnsignedShrt(char* str)
+unsigned short AtoUnsignedShrt(char* str) //converts a string to an unsigned short
 {
     unsigned short value = 0;
     if (is_number_with_hash(str))
@@ -208,7 +209,7 @@ unsigned short AtoUnsignedShrt(char* str)
     return value;
 }
 
-void operandCoder(char* argOne, char* argTwo, unsigned short *codeOne, unsigned short *codeTwo)
+void operandCoder(char* argOne, char* argTwo, unsigned short *codeOne, unsigned short *codeTwo) //codes the operands
 {
     argOne = trimWhiteSpace(argOne);
     argTwo = trimWhiteSpace(argTwo);
@@ -292,7 +293,7 @@ void operandCoder(char* argOne, char* argTwo, unsigned short *codeOne, unsigned 
     }
 }
 
-void labelCoder(char* arg, unsigned short *code, char* type)
+void labelCoder(char* arg, unsigned short *code, char* type) //codes the label
 {
     if (findMethod(arg) == DIRECT)
     {
@@ -309,7 +310,7 @@ void labelCoder(char* arg, unsigned short *code, char* type)
 
 }
 
-unsigned short opcode_coder(char* opcode, char* args)
+unsigned short opcode_coder(char* opcode, char* args) //codes the opcode
 {
     int code = 0;
     int opcodeNum = keyfromstring(opcode);
@@ -393,6 +394,7 @@ unsigned short opcode_coder(char* opcode, char* args)
     return code;
 }
 
+//validator functions for the operations
 bool movValidator(char* op, char* argOne, char* argTwo)
 {
     if ((findMethod(argOne) == IMMEDIATE || findMethod(argOne) == DIRECT || findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT || findMethod(argTwo) == REGISTER_DIRECT))
@@ -537,7 +539,7 @@ bool stopValidator(char* op, char* argOne, char* argTwo)
     return false;
 }
 
-bool validator(char* op, char* argOne, char* argTwo)
+bool validator(char* op, char* argOne, char* argTwo) //validator function for the operations
 {
     switch (keyfromstring(op))
     {

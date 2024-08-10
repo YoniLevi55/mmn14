@@ -15,28 +15,32 @@ void init_code_segment() //init code segment
     codeSegment[0] = (code_segment*)malloc(sizeof(code_segment));
 }
 
-code_segment** get_code_segment(){
+code_segment** get_code_segment() //get code segment
+{
     return codeSegment;
 }
 
-int get_IC(){
+int get_IC() //get IC
+{
     return IC;
 }
 
-int get_code_segment_size(){
+int get_code_segment_size() //get code segment size
+{
     return codeSegmentSize;
 }
 
-void codeSegment_add_code(unsigned short value, char* name){
-    if (codeSegment == NULL)
+void codeSegment_add_code(unsigned short value, char* name) //add code to code segment
+{
+    if (codeSegment == NULL) //if code segment is null
     {
         init_code_segment();
-    }else{
+    }
+    else //if code segment is not null
+    {
         codeSegment = realloc(codeSegment, sizeof(code_segment*) * (IC+1));
         codeSegment[IC] = malloc(sizeof(code_segment) );
     }
-
-    logger(DEBUG,"codeSegment:: Adding code: %d\n",value);
     codeSegment[IC]->value = value;
     codeSegment[IC]->IC = IC + 100;
     codeSegment[IC]->name = strdup(name);

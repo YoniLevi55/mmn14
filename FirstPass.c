@@ -13,7 +13,8 @@
 #include "code_segment.h"
 #include "logger.h"
 
-void breakLine(char* line, char** label, char** operation, char** datatype, char** args) {
+void breakLine(char* line, char** label, char** operation, char** datatype, char** args) //breaks the line into label, operation, datatype and args.
+{
     int count;
     char** splitted = split_string(line, ' ', &count);
     int i=0;
@@ -46,7 +47,7 @@ void breakLine(char* line, char** label, char** operation, char** datatype, char
 
 
 
-void free_if_not_null(void* ptr)
+void free_if_not_null(void* ptr) //frees the memory if the pointer is not NULL.
 {
     if (ptr != NULL)
     {
@@ -62,7 +63,7 @@ void firstPass(char *inFile)
     FILE *file = OpenFile(fileName, "r");
 
     int lineCount = 0;
-    while ((line = ReadLine(file)) != NULL)
+    while ((line = ReadLine(file)) != NULL) //reads the file line by line.
     {
         bool labelFound = false; //FLAG!
         bool isEntry = false;
@@ -76,13 +77,9 @@ void firstPass(char *inFile)
         char* argOne = NULL;
         char* argTwo = NULL;
 
-        logger(DEBUG, "Processing line (%d) %s",lineCount, line);
-        if(lineCount == 20){
-            logger(DEBUG, "Breakpoint\n");
-        }
         lineCount++;
         char* trimmedLine = trimWhiteSpace(line);
-        if (strlen(trimmedLine) > MAX_LINE_LENGTH)
+        if (strlen(trimmedLine) > MAX_LINE_LENGTH) //checks if the line is too long.
         {
             set_error(line, "Line is too long");
         }
@@ -94,7 +91,7 @@ void firstPass(char *inFile)
             labelFound = true;
             removeLastChar(label);
         }
-        if (labelFound && is_symbol_exist(label))
+        if (labelFound && is_symbol_exist(label)) //checks if the label already exists in the symbol table.
         {
             set_error(line, "Label already defined");
         }
@@ -105,15 +102,14 @@ void firstPass(char *inFile)
             isExtern = strncmp(datatype, ".extern", 7) == 0;
             isEntry = strncmp(datatype, ".entry", 6) == 0;
 
-            if (labelFound && (isEntry || isExtern))
+            if (labelFound && (isEntry || isExtern)) //checks if the label is an entry or an extern.
             {
                 logger(WARNING, "Label will be ignored.");
                 continue;
             }
-
-            if ((datatype != NULL) && (isData || isString))
+            if ((datatype != NULL) && (isData || isString)) //checks if the label is an data or a string.
             {
-                if(labelFound)
+                if(labelFound) //checks if a label was found.
                 {
                     if (is_symbol_exist(label))
                     {
@@ -133,7 +129,7 @@ void firstPass(char *inFile)
                         dataSegment_add_data(atoi(data[i]));
                     }
                 }
-                else if (isString)
+                else if (isString) //string coding into array
                 {
                     args = trimWhiteSpace(args);
                     args = removeQuotes(args);
@@ -145,9 +141,9 @@ void firstPass(char *inFile)
                     continue;
                 }
             }
-            else if (isEntry || isExtern)
+            else if (isEntry || isExtern) //entry or extern coding into array
             {
-                if (isExtern)
+                if (isExtern) //extern coding into array
                 {
                     int count = 0;
                     char** outLabels = split_string(args, ' ', &count);
@@ -174,9 +170,9 @@ void firstPass(char *inFile)
             }
             continue;
         }
-        if (labelFound)
+        if (labelFound) //checks if a label was found.
         {
-            if(is_symbol_exist(label))
+            if(is_symbol_exist(label)) //checks if the label already exists in the symbol table.
             {
                 set_error(line, "Label already exists in table.");
             }
@@ -186,20 +182,20 @@ void firstPass(char *inFile)
             }
         }
 
-        if (operation == NULL && datatype == NULL)
+        if (operation == NULL && datatype == NULL) //checks if the operation name is valid.
         {
             set_error(line, "Operation name incorrect.");
         }
-        unsigned short opcodeCode = opcode_coder(operation, args);
+        unsigned short opcodeCode = opcode_coder(operation, args); //opcode coding.
         unsigned short codeOne = 0;
         unsigned short codeTwo = 0;
-        split_args(args, &argOne, &argTwo);
-        if (validator(operation, argOne, argTwo) == false)
+        split_args(args, &argOne, &argTwo); //splitting the arguments.
+        if (validator(operation, argOne, argTwo) == false) //checks if the arguments are valid.
         {
             set_error(line, "Invalid arguments to opcode name");
         }
-        codeSegment_add_code(opcodeCode, operation);
-        operandCoder(argOne, argTwo, &codeOne, &codeTwo);
+        codeSegment_add_code(opcodeCode, operation); //adding the opcode to the code segment.
+        operandCoder(argOne, argTwo, &codeOne, &codeTwo); //operand coding.
         int codeCount = 0;
         if (codeOne != 0)
         {
@@ -209,7 +205,7 @@ void firstPass(char *inFile)
         {
             codeCount++;
         }
-        switch (codeCount)
+        switch (codeCount) //adding the operands to the code segment.
         {
             case 0:
                 break;
@@ -252,51 +248,46 @@ void firstPass(char *inFile)
         free_if_not_null(argTwo);
         labelFound = false;
     }
-    if (get_error_count() > 0)
+    if (get_error_count() > 0) //checks if there are any errors.
     {
         exit_with_error(EXIT_FAILURE, "Errors found in file." );
     }
-    set_ic_offset(get_IC());
+    set_ic_offset(get_IC()); //sets the IC offset.
 }
 
 void secondPass(char *inFile)
 {
-    int IC = 0;
-    code_segment** codeSegment = get_code_segment();
+    int IC = 0; //instruction counter
+    code_segment** codeSegment = get_code_segment(); //get code segment
     char *line;
     char *fileName = malloc(strlen(inFile) + 3);
     int count = 0;
     int lineCount = 0;
     sprintf(fileName, "%s.am", inFile);
     FILE *file = OpenFile(fileName, "r");
-    while ((line = ReadLine(file)) != NULL)
+    while ((line = ReadLine(file)) != NULL) //reads the file line by line.
     {
-        if (lineCount == 3)
-        {
-            logger(DEBUG, "Breakpoint\n");
-        }
-        logger(DEBUG, "Processing line (%d): %s",lineCount, line);
         lineCount++;
         char *label = NULL;
         char *operation = NULL;
         char *datatype = NULL;
         char *args = NULL;
         unsigned short value = 0;
-        breakLine(line, &label, &operation, &datatype, &args);
+        breakLine(line, &label, &operation, &datatype, &args); //breaks the line into label, operation, datatype and args.
         if (datatype != NULL)
         {
             bool isData = strncmp(datatype, ".data", 5) == 0;
             bool isString = strncmp(datatype, ".string", 7) == 0;
             bool isExtern = strncmp(datatype, ".extern", 7) == 0;
             bool isEntry = strncmp(datatype, ".entry", 6) == 0;
-            if (isData || isString || isExtern)
+            if (isData || isString || isExtern) //checks if the datatype is data, string or extern
             {
                 continue;
             }
-            if (isEntry)
+            if (isEntry) //checks if the datatype is entry
             {
-                char** entries = split_string(args, ' ', &count);
-                for (int i = 0; i < count; i++)
+                char** entries = split_string(args, ' ', &count); //splits the arguments
+                for (int i = 0; i < count; i++) //loops through the arguments
                 {
                     set_type(trimWhiteSpace(entries[i]), ".entry");
                 }
@@ -305,73 +296,55 @@ void secondPass(char *inFile)
         }
         char* argOne = NULL;
         char* argTwo = NULL;
-        split_args(args, &argOne, &argTwo);
-        if (findMethod(argOne) == DIRECT && argOne != NULL)
+        split_args(args, &argOne, &argTwo); //splits the arguments
+        if (findMethod(argOne) == DIRECT && argOne != NULL) //checks if the method is direct
         {
-            labelCoder(argOne, &value, get_symbol(argOne)->type);
+            labelCoder(argOne, &value, get_symbol(argOne)->type); //label coding
             for (int i = 0; i < get_code_segment_size(); i++)
             {
-                if (codeSegment[i]->value == (unsigned short) -1)
+                if (codeSegment[i]->value == (unsigned short) -1) //checks if the value is -1
                 {
-                    codeSegment[i]->value = value;
+                    codeSegment[i]->value = value; //sets the value
                     break;
                 }
             }
         }
-        if (findMethod(argTwo) == DIRECT && argTwo != NULL)
+        if (findMethod(argTwo) == DIRECT && argTwo != NULL) //checks if the method is direct
         {
-            labelCoder(argTwo, &value, get_symbol(argTwo)->type);
+            labelCoder(argTwo, &value, get_symbol(argTwo)->type); //label coding
             for (int i = 0; i < get_code_segment_size(); i++)
             {
-                if (codeSegment[i]->value == (unsigned short)-1)
+                if (codeSegment[i]->value == (unsigned short) -1) //checks if the value is -1
                 {
-                    codeSegment[i]->value = value;
+                    codeSegment[i]->value = value; //sets the value
                     break;
                 }
             }
         }
     }
-    if (get_error_count() > 0)
+    if (get_error_count() > 0) //checks if there are any errors
         exit_with_error(EXIT_FAILURE, "Errors found!");
 }
 
-unsigned short intToOctal(unsigned short num) {
-    unsigned short octalNum = 0, placeValue = 1;
-
-    while (num != 0) {
-        // Getting the remainder when divided by 8
-        int remainder = num % 8;
-        // Forming the octal number
-        octalNum += remainder * placeValue;
-        // Updating the place value
-        placeValue *= 10;
-        // Reducing the number
-        num /= 8;
-    }
-
-    return octalNum;
-}
-
-void entryFileMaker(char* inFile)
+void entryFileMaker(char* inFile) //creates the entry file
 {
     char *fileName = malloc(strlen(inFile) + 3);
     sprintf(fileName, "%s.ent", inFile);
     FILE* entFile = OpenFile(fileName, "w");
-    Label** symbol_table =  get_symbol_table();
-    int symbol_count = get_symbol_count();
-    for (int i = 0; i < symbol_count; i++)
+    Label** symbol_table =  get_symbol_table(); //gets the symbol table
+    int symbol_count = get_symbol_count(); //gets the symbol count
+    for (int i = 0; i < symbol_count; i++) //loops through the symbol table
     {
-        logger(DEBUG, "type: %s\n", symbol_table[i]->type);
-        if (strcmp(symbol_table[i]->type, ".entry") == 0)
+        if (strcmp(symbol_table[i]->type, ".entry") == 0) //checks if the type is entry
         {
-            logger(INFO, "Writing to entry file: %s %d", symbol_table[i]->name, symbol_table[i]->value);
+            logger(INFO, "Writing to entry file: %s %d\n", symbol_table[i]->name, symbol_table[i]->value); //writes to the entry file
             fprintf(entFile, "%s %d\n", symbol_table[i]->name, symbol_table[i]->value);
         }
     }
-    fclose(entFile);
+    fclose(entFile); //closes the entry file
 }
 
-void externFileMaker(char* inFile)
+void externFileMaker(char* inFile) //creates the extern file
 {
     char *fileName = malloc(strlen(inFile) + 3);
     sprintf(fileName, "%s.ext", inFile);
@@ -380,20 +353,20 @@ void externFileMaker(char* inFile)
     int symbol_count = get_symbol_count();
     code_segment** codeSegment = get_code_segment();
 
-    for (int i = 0; i < symbol_count; i++)
+    for (int i = 0; i < symbol_count; i++) //loops through the symbol table
     {
-        if (strcmp(symbol_table[i]->type, ".extern") == 0)
+        if (strcmp(symbol_table[i]->type, ".extern") == 0) //checks if the type is extern
         {
-            for (int j = 0; j < get_code_segment_size(); j++)
+            for (int j = 0; j < get_code_segment_size(); j++) //loops through the code segment
             {
-                if (strcmp(codeSegment[j]->name , symbol_table[i]->name)==0)
+                if (strcmp(codeSegment[j]->name , symbol_table[i]->name)==0) //checks if the name is the same
                 {
                     fprintf(extFile, "%s %d\n", symbol_table[i]->name, j+100);
                 }
             }
         }
     }
-    fclose(extFile);
+    fclose(extFile); //closes the extern file
 }
 
 void objectFileMaker(char* inFile)
@@ -403,19 +376,19 @@ void objectFileMaker(char* inFile)
     char *fileName = malloc(strlen(inFile) + 2);
     sprintf(fileName, "%s.ob", inFile);
     FILE* obFile = OpenFile(fileName, "w");
-    int codeSegmentCounter = get_code_segment_size();
-    int dataSegmentCounter = get_data_segment_size();
-    fprintf(obFile, "%d %d\n", codeSegmentCounter, dataSegmentCounter);
+    int codeSegmentCounter = get_code_segment_size(); //gets the code segment size
+    int dataSegmentCounter = get_data_segment_size(); //gets the data segment size
+    fprintf(obFile, "%d %d\n", codeSegmentCounter, dataSegmentCounter); //prints the code segment counter and the data segment counter
     int counter = 0;
-    for (int i = 0; i < codeSegmentCounter; i++)
+    for (int i = 0; i < codeSegmentCounter; i++) //loops through the code segment
     {
         fprintf(obFile, "%d %05o\n", counter+100, codeSegment[i]->value & 0x7FFF);
         counter++;
     }
-    for (int i = 0; i < dataSegmentCounter; i++)
+    for (int i = 0; i < dataSegmentCounter; i++) //loops through the data segment
     {
         fprintf(obFile, "%d %05o\n", counter+100, dataSegment[i] & 0x7FFF);
         counter++;
     }
-    fclose(obFile);
+    fclose(obFile); //closes the object file
 }

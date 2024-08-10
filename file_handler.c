@@ -4,7 +4,8 @@
 #include "errors_handler.h"
 #define MAX_LINE_LENGTH 80
 
-FILE* OpenFile(const char *filename, const char *mode){
+FILE* OpenFile(const char *filename, const char *mode) //open file
+{
     FILE *file = fopen(filename, mode);
     if(file == NULL){
         exit_with_error(1, "Could not open file");
@@ -12,7 +13,8 @@ FILE* OpenFile(const char *filename, const char *mode){
     return file;
 }
 
-char* ReadLine(FILE *file){
+char* ReadLine(FILE *file) //read line from file
+{
     char *line = malloc(MAX_LINE_LENGTH);
     if (fgets(line, MAX_LINE_LENGTH, file) == NULL){
         free(line);

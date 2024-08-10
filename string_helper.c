@@ -88,7 +88,7 @@ char** split_string(const char* str, const char delimiter, int* count) {
     return tokens;
 }
 
-bool isLabel(char *line)
+bool isLabel(char *line) //checks if the line is a label.
 {
     char* trimmedLine = trimWhiteSpace(line);
     int colonPos = findFirstSign(trimmedLine, ':');
@@ -103,7 +103,7 @@ bool isLabel(char *line)
     }
 }
 
-char* getLabel(char* line)
+char* getLabel(char* line) //gets the label from the line.
 {
     int colonPos = findFirstSign(line,':');
     char* label = malloc(colonPos - 1);
@@ -111,15 +111,17 @@ char* getLabel(char* line)
     return label;
 }
 
-void removeLastChar(char* str) {
+void removeLastChar(char* str) //removes the last character from the string.
+{
     int length = strlen(str);
-
-    if (length > 0) {
-        str[length - 1] = '\0';  // Set the last character to null terminator
+    if (length > 0)
+    {
+        str[length - 1] = '\0'; //sets the last character to null terminator
     }
 }
 
-char *removeQuotes(const char *str) {
+char *removeQuotes(const char *str)
+{
     int length = strlen(str);
     char *result = (char *)malloc(length + 1); // Allocate memory for the new string
     if (result == NULL) {
