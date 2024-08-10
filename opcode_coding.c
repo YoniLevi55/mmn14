@@ -6,6 +6,9 @@
 #include "string_helper.h"
 #include "opcode_coding.h"
 #include "first_pass.h"
+
+#define OFFSET_DEST_ADDRESS 3
+#define OFFSET_SOURCE_ADDRESS 6
 enum OPCODES //enum for the opcodes
 {
     OP_MOV = 0,
@@ -215,12 +218,12 @@ void operandCoder(char* argOne, char* argTwo, unsigned short *codeOne, unsigned 
     if (findMethod(argOne) == IMMEDIATE)
     {
         unsigned short value = AtoUnsignedShrt(&argOne[1]);
-        *codeOne = ( (unsigned short) ABSOLUTE | (value << 3));
+        *codeOne = ( (unsigned short) ABSOLUTE | (value << OFFSET_DEST_ADDRESS));
     }
     if (findMethod(argTwo) == IMMEDIATE)
     {
         unsigned short value = AtoUnsignedShrt(&argTwo[1]);
-        *codeTwo =  (  (unsigned short) ABSOLUTE | (value << 3));
+        *codeTwo =  (  (unsigned short) ABSOLUTE | (value << OFFSET_DEST_ADDRESS));
     }
     if (findMethod(argOne) == DIRECT)
     {
@@ -233,32 +236,32 @@ void operandCoder(char* argOne, char* argTwo, unsigned short *codeOne, unsigned 
     if (findMethod(argOne) == REGISTER_DIRECT  && argTwo == NULL)
     {
         unsigned short value = AtoUnsignedShrt(&argOne[1]);
-        *codeOne = ( (unsigned short) ABSOLUTE | (value << 3));
+        *codeOne = ( (unsigned short) ABSOLUTE | (value << OFFSET_DEST_ADDRESS));
     }
     else if (findMethod(argOne) == REGISTER_DIRECT && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT))
     {
         unsigned short value = AtoUnsignedShrt(&argOne[1]);
-        *codeOne = ( (unsigned short)ABSOLUTE | (value << 6));
+        *codeOne = ( (unsigned short)ABSOLUTE | (value << OFFSET_SOURCE_ADDRESS));
     }
     else if (findMethod(argTwo) == REGISTER_DIRECT && (findMethod(argOne) == IMMEDIATE|| findMethod(argOne) == DIRECT))
     {
         unsigned short value = AtoUnsignedShrt(&argTwo[1]);
-        *codeTwo = ( (unsigned short)ABSOLUTE | (value << 3));
+        *codeTwo = ( (unsigned short)ABSOLUTE | (value << OFFSET_DEST_ADDRESS));
     }
     else if (findMethod(argOne) == REGISTER_INDIRECT && argTwo == NULL)
     {
         unsigned short value = AtoUnsignedShrt(&argOne[2]);
-        *codeOne = ( (unsigned short)ABSOLUTE | (value << 3));
+        *codeOne = ( (unsigned short)ABSOLUTE | (value << OFFSET_DEST_ADDRESS));
     }
     else if (findMethod(argOne) == REGISTER_INDIRECT && (findMethod(argTwo) == IMMEDIATE|| findMethod(argTwo) == DIRECT))
     {
         unsigned short value = AtoUnsignedShrt(&argOne[2]);
-        *codeOne = ( (unsigned short)ABSOLUTE | (value << 6));
+        *codeOne = ( (unsigned short)ABSOLUTE | (value << OFFSET_SOURCE_ADDRESS));
     }
     else if (findMethod(argTwo) == REGISTER_INDIRECT && (findMethod(argOne) == IMMEDIATE|| findMethod(argOne) == DIRECT ))
     {
         unsigned short value = AtoUnsignedShrt(&argTwo[2]);
-        *codeTwo = ( (unsigned short)ABSOLUTE | (value << 3));
+        *codeTwo = ( (unsigned short)ABSOLUTE | (value << OFFSET_DEST_ADDRESS));
     }
     else if ((findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == REGISTER_DIRECT || findMethod(argTwo) == REGISTER_INDIRECT))
     {
@@ -280,7 +283,7 @@ void operandCoder(char* argOne, char* argTwo, unsigned short *codeOne, unsigned 
         {
             value2 = AtoUnsignedShrt(&argTwo[2]);
         }
-        *codeOne = ( (unsigned short)ABSOLUTE | (value << 6) | (value2 << 3));
+        *codeOne = ( (unsigned short)ABSOLUTE | (value << OFFSET_SOURCE_ADDRESS) | (value2 << OFFSET_DEST_ADDRESS));
     }
     if (argOne == NULL)
     {
@@ -298,12 +301,12 @@ void labelCoder(char* arg, unsigned short *code, char* type) //codes the label
     {
         if (strcmp(type, ".extern") == 0)
         {
-            *code = (EXTERNAL | (0 << 3));
+            *code = (EXTERNAL | (0 << OFFSET_DEST_ADDRESS));
         }
         else
         {
             unsigned short labelValue = getLabelValue(arg);
-            *code = (RELOCATABLE | (labelValue << 3));
+            *code = (RELOCATABLE | (labelValue << OFFSET_DEST_ADDRESS));
         }
     }
 

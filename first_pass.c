@@ -279,12 +279,12 @@ void objectFileMaker(char* inFile)
     int counter = 0;
     for (int i = 0; i < codeSegmentCounter; i++) //loops through the code segment
     {
-        fprintf(obFile, "%d %05o\n", counter+100, codeSegment[i]->value & 0x7FFF);
+        fprintf(obFile, "%04d %05o\n", counter+100, codeSegment[i]->value & 0x7FFF);
         counter++;
     }
     for (int i = 0; i < dataSegmentCounter; i++) //loops through the data segment
     {
-        fprintf(obFile, "%d %05o\n", counter+100, dataSegment[i] & 0x7FFF);
+        fprintf(obFile, "%04d %05o\n", counter+100, dataSegment[i] & 0x7FFF);
         counter++;
     }
     fclose(obFile); //closes the object file
