@@ -190,9 +190,9 @@ void firstPass(char *inFile)
         {
             set_error(line, "Operation name incorrect.");
         }
-        int opcodeCode = opcode_coder(operation, args);
-        int codeOne = 0;
-        int codeTwo = 0;
+        unsigned short opcodeCode = opcode_coder(operation, args);
+        unsigned short codeOne = 0;
+        unsigned short codeTwo = 0;
         split_args(args, &argOne, &argTwo);
         if (validator(operation, argOne, argTwo) == false)
         {
@@ -281,7 +281,7 @@ void secondPass(char *inFile)
         char *operation = NULL;
         char *datatype = NULL;
         char *args = NULL;
-        int value = 0;
+        unsigned short value = 0;
         breakLine(line, &label, &operation, &datatype, &args);
         if (datatype != NULL)
         {
@@ -308,11 +308,10 @@ void secondPass(char *inFile)
         split_args(args, &argOne, &argTwo);
         if (findMethod(argOne) == DIRECT && argOne != NULL)
         {
-            value = getLabelValue(argOne);
+            labelCoder(argOne, &value, get_symbol(argOne)->type);
             for (int i = 0; i < get_code_segment_size(); i++)
             {
-                //logger(DEBUG, "codeSegment[%d] = %d\n", i, codeSegment[i]);
-                if (codeSegment[i]->value == -1)
+                if (codeSegment[i]->value == (unsigned short) -1)
                 {
                     codeSegment[i]->value = value;
                     break;
@@ -321,11 +320,10 @@ void secondPass(char *inFile)
         }
         if (findMethod(argTwo) == DIRECT && argTwo != NULL)
         {
-            value = getLabelValue(argTwo);
+            labelCoder(argTwo, &value, get_symbol(argTwo)->type);
             for (int i = 0; i < get_code_segment_size(); i++)
             {
-                //logger(DEBUG, "codeSegment[%d] = %d\n", i, codeSegment[i]);
-                if (codeSegment[i]->value == -1)
+                if (codeSegment[i]->value == (unsigned short)-1)
                 {
                     codeSegment[i]->value = value;
                     break;
@@ -337,8 +335,8 @@ void secondPass(char *inFile)
         exit_with_error(EXIT_FAILURE, "Errors found!");
 }
 
-int intToOctal(int num) {
-    int octalNum = 0, placeValue = 1;
+unsigned short intToOctal(unsigned short num) {
+    unsigned short octalNum = 0, placeValue = 1;
 
     while (num != 0) {
         // Getting the remainder when divided by 8
@@ -411,13 +409,13 @@ void objectFileMaker(char* inFile)
     int counter = 0;
     for (int i = 0; i < codeSegmentCounter; i++)
     {
+        fprintf(obFile, "%d %05o\n", counter+100, codeSegment[i]->value & 0x7FFF);
         counter++;
-        fprintf(obFile, "%d %05d\n", counter+100, intToOctal(codeSegment[i]->value));
     }
     for (int i = 0; i < dataSegmentCounter; i++)
     {
+        fprintf(obFile, "%d %o\n", counter+100, dataSegment[i]);
         counter++;
-        fprintf(obFile, "%d %d\n", counter+100, intToOctal(dataSegment[i]));
     }
     fclose(obFile);
 }

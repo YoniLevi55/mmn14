@@ -26,7 +26,7 @@ int get_code_segment_size(){
     return codeSegmentSize;
 }
 
-void codeSegment_add_code(int value, char* name){
+void codeSegment_add_code(unsigned short value, char* name){
     if (codeSegment == NULL)
     {
         init_code_segment();

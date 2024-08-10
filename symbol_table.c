@@ -8,7 +8,7 @@
 Label** symbol_table;
 int symbol_count = 0;
 
-void add_symbol(char* name, int value, char* type){
+void add_symbol(char* name, unsigned short value, char* type){
     logger(DEBUG,"Adding symbol: %s, value: %d, type: %s\n",name, value, type);
     Label* newLabel = (Label*)malloc(sizeof(Label));
     newLabel->name = malloc(strlen(name)+1);
@@ -58,7 +58,7 @@ Label* get_symbol(char *symbol){
 }
 
 
-int getLabelValue(char* label)
+unsigned short getLabelValue(char* label)
 {
     for (int i = 0; i < sizeof(symbol_table); i++)
     {
@@ -70,7 +70,7 @@ int getLabelValue(char* label)
     return -1;
 }
 
-void set_ic_offset(int offset){
+void set_ic_offset(unsigned short offset){
     for (int i = 0; i < symbol_count; i++)
     {
         if (strcmp(symbol_table[i]->type, ".data") == 0)

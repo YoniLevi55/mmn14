@@ -193,79 +193,94 @@ enum METHODS findMethod(char* arg)
     }
 }
 
-void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo)
+unsigned short AtoUnsignedShrt(char* str)
+{
+    unsigned short value = 0;
+    if (is_number_with_hash(str))
+    {
+        int readValue = atoi(&str[1]);
+        value = (unsigned short)readValue;
+    }
+    else{
+        int readValue = atoi(str);
+        value = (unsigned short)readValue;
+    }
+    return value;
+}
+
+void operandCoder(char* argOne, char* argTwo, unsigned short *codeOne, unsigned short *codeTwo)
 {
     argOne = trimWhiteSpace(argOne);
     argTwo = trimWhiteSpace(argTwo);
     if (findMethod(argOne) == IMMEDIATE)
     {
-        int value = atoi(&argOne[1]);
-        *codeOne = (ABSOLUTE | (value << 3));
+        unsigned short value = AtoUnsignedShrt(&argOne[1]);
+        *codeOne = ( (unsigned short) ABSOLUTE | (value << 3));
     }
     if (findMethod(argTwo) == IMMEDIATE)
     {
-        int value = atoi(&argTwo[1]);
-        *codeTwo = (ABSOLUTE | (value << 3));
+        unsigned short value = AtoUnsignedShrt(&argTwo[1]);
+        *codeTwo =  (  (unsigned short) ABSOLUTE | (value << 3));
     }
     if (findMethod(argOne) == DIRECT)
     {
-        *codeOne = -1;
+        *codeOne = (unsigned short) -1;
     }
     if (findMethod(argTwo) == DIRECT)
     {
-        *codeTwo = -1;
+        *codeTwo = (unsigned short) -1;
     }
     if (findMethod(argOne) == REGISTER_DIRECT  && argTwo == NULL)
     {
-        int value = atoi(&argOne[1]);
-        *codeOne = (ABSOLUTE | (value << 3));
+        unsigned short value = AtoUnsignedShrt(&argOne[1]);
+        *codeOne = ( (unsigned short) ABSOLUTE | (value << 3));
     }
     else if (findMethod(argOne) == REGISTER_DIRECT && (findMethod(argTwo) == IMMEDIATE || findMethod(argTwo) == DIRECT))
     {
-        int value = atoi(&argOne[1]);
-        *codeOne = (ABSOLUTE | (value << 6));
+        unsigned short value = AtoUnsignedShrt(&argOne[1]);
+        *codeOne = ( (unsigned short)ABSOLUTE | (value << 6));
     }
     else if (findMethod(argTwo) == REGISTER_DIRECT && (findMethod(argOne) == IMMEDIATE|| findMethod(argOne) == DIRECT))
     {
-        int value = atoi(&argTwo[1]);
-        *codeTwo = (ABSOLUTE | (value << 3));
+        unsigned short value = AtoUnsignedShrt(&argTwo[1]);
+        *codeTwo = ( (unsigned short)ABSOLUTE | (value << 3));
     }
     else if (findMethod(argOne) == REGISTER_INDIRECT && argTwo == NULL)
     {
-        int value = atoi(&argOne[2]);
-        *codeOne = (ABSOLUTE | (value << 3));
+        unsigned short value = AtoUnsignedShrt(&argOne[2]);
+        *codeOne = ( (unsigned short)ABSOLUTE | (value << 3));
     }
     else if (findMethod(argOne) == REGISTER_INDIRECT && (findMethod(argTwo) == IMMEDIATE|| findMethod(argTwo) == DIRECT))
     {
-        int value = atoi(&argOne[2]);
-        *codeOne = (ABSOLUTE | (value << 6));
+        unsigned short value = AtoUnsignedShrt(&argOne[2]);
+        *codeOne = ( (unsigned short)ABSOLUTE | (value << 6));
     }
     else if (findMethod(argTwo) == REGISTER_INDIRECT && (findMethod(argOne) == IMMEDIATE|| findMethod(argOne) == DIRECT ))
     {
-        int value = atoi(&argTwo[2]);
-        *codeTwo = (ABSOLUTE | (value << 3));
+        unsigned short value = AtoUnsignedShrt(&argTwo[2]);
+        *codeTwo = ( (unsigned short)ABSOLUTE | (value << 3));
     }
     else if ((findMethod(argOne) == REGISTER_DIRECT || findMethod(argOne) == REGISTER_INDIRECT) && (findMethod(argTwo) == REGISTER_DIRECT || findMethod(argTwo) == REGISTER_INDIRECT))
     {
-        int value = 0;
-        int value2  = 0;
+        unsigned short value = 0;
+        unsigned short value2  = 0;
         if (findMethod(argOne) == REGISTER_DIRECT)
         {
-            value = atoi(&argOne[1]);
+            value = AtoUnsignedShrt(&argOne[1]);
         }
         else if (findMethod(argOne) == REGISTER_INDIRECT)
         {
-            value = atoi(&argOne[2]);
+            value = AtoUnsignedShrt(&argOne[2]);
         }
         if (findMethod(argTwo) == REGISTER_DIRECT)
         {
-            value2 = atoi(&argTwo[1]);
+            value2 = AtoUnsignedShrt(&argTwo[1]);
         }
         else if (findMethod(argTwo) == REGISTER_INDIRECT)
         {
-            value2 = atoi(&argTwo[2]);
+            value2 = AtoUnsignedShrt(&argTwo[2]);
         }
-        *codeOne = (ABSOLUTE | (value << 6) | (value2 << 3));
+        *codeOne = ( (unsigned short)ABSOLUTE | (value << 6) | (value2 << 3));
     }
     if (argOne == NULL)
     {
@@ -277,22 +292,24 @@ void operandCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo)
     }
 }
 
-void listCoder(char* argOne, char* argTwo, int *codeOne, int *codeTwo)
+void labelCoder(char* arg, unsigned short *code, char* type)
 {
-    if (isLabel(argOne))
+    if (findMethod(arg) == DIRECT)
     {
-        int labelValue = getLabelValue(argOne);
-        *codeOne = (RELOCATABLE | (labelValue << 6));
-    }
-    if (isLabel(argTwo))
-    {
-        int labelValue = getLabelValue(argTwo);
-        *codeTwo = (RELOCATABLE | (labelValue << 3));
+        if (strcmp(type, ".extern") == 0)
+        {
+            *code = (EXTERNAL | (0 << 3));
+        }
+        else
+        {
+            unsigned short labelValue = getLabelValue(arg);
+            *code = (RELOCATABLE | (labelValue << 3));
+        }
     }
 
 }
 
-int opcode_coder(char* opcode, char* args)
+unsigned short opcode_coder(char* opcode, char* args)
 {
     int code = 0;
     int opcodeNum = keyfromstring(opcode);
