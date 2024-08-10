@@ -198,7 +198,7 @@ void firstPass(char *inFile)
         {
             set_error(line, "Invalid arguments to opcode name");
         }
-        codeSegment_add_code(opcodeCode);
+        codeSegment_add_code(opcodeCode, operation);
         operandCoder(argOne, argTwo, &codeOne, &codeTwo);
         int codeCount = 0;
         if (codeOne != 0)
@@ -216,32 +216,32 @@ void firstPass(char *inFile)
             case 1:
                 if (findMethod(argOne) == DIRECT)
                 {
-                    codeSegment_add_code(-1);
+                    codeSegment_add_code(-1, argOne);
                     break;
                 }
-                codeSegment_add_code(codeOne);
+                codeSegment_add_code(codeOne, argOne);
                 break;
             case 2:
                 if (findMethod(argOne) == DIRECT && findMethod(argTwo) != DIRECT)
                 {
-                    codeSegment_add_code(-1);
-                    codeSegment_add_code(codeTwo);
+                    codeSegment_add_code(-1, argOne);
+                    codeSegment_add_code(codeTwo, argTwo);
                     break;
                 }
                 else if (findMethod(argTwo) == DIRECT && findMethod(argOne) != DIRECT)
                 {
-                    codeSegment_add_code(codeOne);
-                    codeSegment_add_code(-1);
+                    codeSegment_add_code(codeOne, argOne);
+                    codeSegment_add_code(-1, argTwo);
                     break;
                 }
                 else if (findMethod(argOne) == DIRECT && findMethod(argTwo) == DIRECT)
                 {
-                    codeSegment_add_code(-1);
-                    codeSegment_add_code(-1);
+                    codeSegment_add_code(-1, argOne);
+                    codeSegment_add_code(-1, argTwo);
                     break;
                 }
-                codeSegment_add_code(codeOne);
-                codeSegment_add_code(codeTwo);
+                codeSegment_add_code(codeOne, argOne);
+                codeSegment_add_code(codeTwo, argTwo);
                 break;
         }
         free_if_not_null(label);
@@ -262,7 +262,7 @@ void firstPass(char *inFile)
 void secondPass(char *inFile)
 {
     int IC = 0;
-    int* codeSegment = get_code_segment();
+    code_segment** codeSegment = get_code_segment();
     char *line;
     char *fileName = malloc(strlen(inFile) + 3);
     int count = 0;
@@ -312,9 +312,9 @@ void secondPass(char *inFile)
             for (int i = 0; i < get_code_segment_size(); i++)
             {
                 //logger(DEBUG, "codeSegment[%d] = %d\n", i, codeSegment[i]);
-                if (codeSegment[i] == -1)
+                if (codeSegment[i]->value == -1)
                 {
-                    codeSegment[i] = value;
+                    codeSegment[i]->value = value;
                     break;
                 }
             }
@@ -325,9 +325,9 @@ void secondPass(char *inFile)
             for (int i = 0; i < get_code_segment_size(); i++)
             {
                 //logger(DEBUG, "codeSegment[%d] = %d\n", i, codeSegment[i]);
-                if (codeSegment[i] == -1)
+                if (codeSegment[i]->value == -1)
                 {
-                    codeSegment[i] = value;
+                    codeSegment[i]->value = value;
                     break;
                 }
             }
@@ -380,15 +380,15 @@ void externFileMaker(char* inFile)
     FILE* extFile = OpenFile(fileName, "w");
     Label** symbol_table = get_symbol_table();
     int symbol_count = get_symbol_count();
-    int* codeSegment = get_code_segment();
+    code_segment** codeSegment = get_code_segment();
 
     for (int i = 0; i < symbol_count; i++)
     {
-        if (strcmp(symbol_table[i]->type, "extern") == 0)
+        if (strcmp(symbol_table[i]->type, ".extern") == 0)
         {
             for (int j = 0; j < get_code_segment_size(); j++)
             {
-                if (codeSegment[j] == symbol_table[i]->value)
+                if (strcmp(codeSegment[j]->name , symbol_table[i]->name)==0)
                 {
                     fprintf(extFile, "%s %d\n", symbol_table[i]->name, j+100);
                 }
@@ -401,7 +401,7 @@ void externFileMaker(char* inFile)
 void objectFileMaker(char* inFile)
 {
     int *dataSegment = get_data_segment();
-    int *codeSegment = get_code_segment();
+    code_segment** codeSegment = get_code_segment();
     char *fileName = malloc(strlen(inFile) + 2);
     sprintf(fileName, "%s.ob", inFile);
     FILE* obFile = OpenFile(fileName, "w");
@@ -412,7 +412,7 @@ void objectFileMaker(char* inFile)
     for (int i = 0; i < codeSegmentCounter; i++)
     {
         counter++;
-        fprintf(obFile, "%d %05d\n", counter+100, intToOctal(codeSegment[i]));
+        fprintf(obFile, "%d %05d\n", counter+100, intToOctal(codeSegment[i]->value));
     }
     for (int i = 0; i < dataSegmentCounter; i++)
     {

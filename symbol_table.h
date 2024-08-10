@@ -3,6 +3,7 @@ typedef struct
     char* name;
     int value;
     char* type;
+    int location;
 } Label;
 
 bool is_symbol_exist(char *symbol);

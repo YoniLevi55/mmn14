@@ -1,15 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "logger.h"
-int* codeSegment = NULL;
+#include "code_segment.h"
+code_segment** codeSegment = NULL;
+
 int IC = 0;
 int codeSegmentSize = 0;
 
-void init_code_segment(int size){
-    codeSegment = (int*)malloc(sizeof(int) * size);
+void init_code_segment(){
+
+    codeSegment = malloc(sizeof(code_segment*));
+    codeSegment[0] = (code_segment*)malloc(sizeof(code_segment));
 }
 
-int* get_code_segment(){
+code_segment** get_code_segment(){
     return codeSegment;
 }
 
@@ -21,26 +26,25 @@ int get_code_segment_size(){
     return codeSegmentSize;
 }
 
-void codeSegment_add_code(int value){
+void codeSegment_add_code(int value, char* name){
     if (codeSegment == NULL)
     {
-        init_code_segment(1);
+        init_code_segment();
     }else{
-        codeSegment = (int*)realloc(codeSegment, sizeof(int) * (IC+1));
+        codeSegment = realloc(codeSegment, sizeof(code_segment*) * (IC+1));
+        codeSegment[IC] = malloc(sizeof(code_segment) );
     }
+
     logger(DEBUG,"codeSegment:: Adding code: %d\n",value);
-    codeSegment[IC] = value;
+    codeSegment[IC]->value = value;
+    codeSegment[IC]->IC = IC + 100;
+    codeSegment[IC]->name = strdup(name);
     IC++;
-    logger(DEBUG,"IC: %d\n",IC);
     codeSegmentSize++;
 }
 
-void clear_IC(){
-    IC = 0;
-}
-void inc_IC(int L){
-    IC+=L;
-}
+
+
 
 void printCodeSegment()
 {
@@ -50,7 +54,7 @@ void printCodeSegment()
 
     for (int i = 0; i < codeSegmentSize; i++)
     {
-        logger(DEBUG,"(%d)%d\n",i, codeSegment[i]);
+        logger(DEBUG,"(%d)%d\n",i, codeSegment[i]->value);
     }
     logger(DEBUG,"--------------------\n");
 }
