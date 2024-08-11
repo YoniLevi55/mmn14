@@ -160,6 +160,7 @@ void firstPass(char *inFile)
         if (operation == NULL && datatype == NULL) /*checks if the operation name is valid.*/
         {
             set_error(line, "Operation name incorrect.");
+            continue;
         }
         opcodeCode = opcode_coder(operation, args); /*opcode coding.*/
         codeOne = 0;

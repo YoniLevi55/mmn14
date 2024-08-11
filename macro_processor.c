@@ -115,7 +115,7 @@ void preProcessFile(char* inputFile) /*processing the initial input file.*/
             logger(DEBUG, "Writing to output file...\n");
             logger(DEBUG, "Macro size: %d\n", currentMacro->LineCount);
             for (i = 0; i < currentMacro->LineCount; i++) /*printing the macro to the output file.*/
-                fprintf(outFile, "%s", currentMacro->Body[i]);
+                fprintf(outFile, "%s\n", currentMacro->Body[i]);
         }
         else
         {
