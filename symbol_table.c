@@ -10,9 +10,17 @@ int symbol_count = 0;
 
 void add_symbol(char* name, unsigned short value, char* type){
     Label* newLabel = (Label*)malloc(sizeof(Label));
+    if(newLabel == NULL){
+        logger(ERROR,"Failed to allocate memory for symbol\n");
+        exit(1);
+    }
     logger(DEBUG,"Adding symbol: %s, value: %d, type: %s\n",name, value, type);
     newLabel->name = malloc(strlen(name)+1);
     newLabel->type = malloc(strlen(type)+1);
+    if(newLabel->name == NULL || newLabel->type == NULL){
+        logger(ERROR,"Failed to allocate memory for symbol name or type\n");
+        exit(1);
+    }
     newLabel->value = value;
     strcpy(newLabel->name, name);
     strcpy(newLabel->type, type);

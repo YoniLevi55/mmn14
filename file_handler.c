@@ -16,6 +16,9 @@ FILE* OpenFile(const char *filename, const char *mode) /*open file*/
 char* ReadLine(FILE *file) /*read line from file*/
 {
     char *line = malloc(MAX_LINE_LENGTH);
+    if (line == NULL){
+        exit_with_error(1, "Failed to allocate memory for line");
+    }
     if (fgets(line, MAX_LINE_LENGTH, file) == NULL){
         free(line);
         return NULL;

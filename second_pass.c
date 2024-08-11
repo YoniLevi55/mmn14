@@ -29,6 +29,10 @@ void secondPass(char *inFile)
     char *fileName = malloc(strlen(inFile) + 3);
     int count = 0;
     int lineCount = 0;
+    if (fileName == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory for file name.");
+    }
     sprintf(fileName, "%s.am", inFile);
     file = OpenFile(fileName, "r");
     while ((line = ReadLine(file)) != NULL) /*reads the file line by line.*/

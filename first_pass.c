@@ -32,6 +32,10 @@ void firstPass(char *inFile)
     int lineCount = 0;
     int codeCount = 0;
     char *fileName = malloc(strlen(inFile) + 3);
+    if (fileName == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory for file name.");
+    }
     sprintf(fileName, "%s.am", inFile);
     file = OpenFile(fileName, "r");
 
@@ -65,10 +69,6 @@ void firstPass(char *inFile)
         {
             labelFound = true;
             removeLastChar(label);
-        }
-        if (labelFound && is_symbol_exist(label)) /*checks if the label already exists in the symbol table.*/
-        {
-            set_error(line, "Label already defined");
         }
         if (datatype != NULL)
         {

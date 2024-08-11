@@ -22,6 +22,10 @@ void externFileMaker(char* inFile) /*creates the extern file*/
     code_segment** codeSegment;
 
     char *fileName = malloc(strlen(inFile) + 3);
+    if (fileName == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory for file name.");
+    }
     sprintf(fileName, "%s.ext", inFile);
     extFile = OpenFile(fileName, "w");
     symbol_table = get_symbol_table();
@@ -51,6 +55,10 @@ void entryFileMaker(char* inFile) /*creates the entry file*/
     Label** symbol_table;
 
     char *fileName = malloc(strlen(inFile) + 3);
+    if (fileName == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory for file name.");
+    }
     sprintf(fileName, "%s.ent", inFile);
     entFile = OpenFile(fileName, "w");
     symbol_table =  get_symbol_table(); /*gets the symbol table*/
@@ -76,6 +84,10 @@ void objectFileMaker(char* inFile)
     unsigned short *dataSegment = get_data_segment();
     code_segment** codeSegment = get_code_segment();
     char *fileName = malloc(strlen(inFile) + 2);
+    if (fileName == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory for file name.");
+    }
     sprintf(fileName, "%s.ob", inFile);
     obFile = OpenFile(fileName, "w");
     codeSegmentCounter = get_code_segment_size(); /*gets the code segment size*/

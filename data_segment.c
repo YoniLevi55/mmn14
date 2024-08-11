@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "errors_handler.h"
 #include "logger.h"
 unsigned short* dataSegment = NULL;
 int dataSegmentSize = 0;
@@ -14,6 +15,10 @@ unsigned short* get_data_segment()
 void init_data_segment(int size)
 {
     dataSegment = (unsigned short*)malloc(sizeof(unsigned short) * size);
+    if (dataSegment == NULL)
+    {
+        exit_with_error(1, "Failed to allocate memory for data segment");
+    }
 }
 
 int get_DC()

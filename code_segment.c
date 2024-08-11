@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "logger.h"
+#include "errors_handler.h"
 #include "code_segment.h"
 code_segment** codeSegment = NULL;
 
@@ -13,7 +14,15 @@ void init_code_segment()
 {
 
     codeSegment = malloc(sizeof(code_segment*));
+    if (codeSegment == NULL) 
+    {
+        exit_with_error(1, "Failed to allocate memory for code segment");
+    }
     codeSegment[0] = (code_segment*)malloc(sizeof(code_segment));
+    if (codeSegment[0] == NULL) 
+    {
+        exit_with_error(1, "Failed to allocate memory for code segment");
+    }
 }
 
 /* get code segment */
@@ -45,6 +54,10 @@ void codeSegment_add_code(unsigned short value, char* name)
     {
         codeSegment = realloc(codeSegment, sizeof(code_segment*) * (IC+1));
         codeSegment[IC] = malloc(sizeof(code_segment) );
+        if (codeSegment[IC] == NULL) 
+        {
+            exit_with_error(1, "Failed to allocate memory for code segment");
+        }
     }
     codeSegment[IC]->value = value;
     codeSegment[IC]->IC = IC + 100;

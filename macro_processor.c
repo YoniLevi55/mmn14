@@ -43,11 +43,19 @@ void preProcessFile(char* inputFile) /*processing the initial input file.*/
     bool macroFound = false; /*FLAG!*/
     char *fileName = malloc(strlen(inputFile) + 3);
     char *outputFile = malloc(strlen(inputFile) + 3);
+    if (fileName == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory for file name.");
+    }
+    if (outputFile == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory for output file name.");
+    }
     sprintf(outputFile, "%s.am", inputFile);
     sprintf(fileName, "%s.as", inputFile);
     inFile = OpenFile(fileName, "r"); /*opening the input file for reading.*/
     outFile = OpenFile(outputFile, "w"); /*creating the output file for writing.*/
-    
+
     while ((line = ReadLine(inFile)) != NULL)
     {
         line = trimWhiteSpace(line); /*trimming white space from the beginning of the line.*/
@@ -58,6 +66,10 @@ void preProcessFile(char* inputFile) /*processing the initial input file.*/
             if (symbolNames == NULL)
             {
                 symbolNames = malloc(strlen(labelSplit[0]) + 1);
+                if (symbolNames == NULL)
+                {
+                    exit_with_error(EXIT_FAILURE, "Failed to allocate memory for symbol names.");
+                }
                 strcpy(&symbolNames[labels], labelSplit[0]);
                 labels++;
             }
@@ -73,17 +85,33 @@ void preProcessFile(char* inputFile) /*processing the initial input file.*/
             if (macroCount == 0) /*allocating memory for the macros array.*/
             {
                 macros = malloc(sizeof(Macro*));
+                if (macros == NULL)
+                {
+                    exit_with_error(EXIT_FAILURE, "Failed to allocate memory for macros.");
+                }
                 macros[0] = malloc(sizeof(Macro));
+                if (macros[0] == NULL)
+                {
+                    exit_with_error(EXIT_FAILURE, "Failed to allocate memory for macros.");
+                }
                 macros[0]->LineCount = 0;
             }
             else
             {
                 macros = realloc(macros, sizeof(Macro*)*(macroCount + 1));
                 macros[macroCount] = malloc(sizeof(Macro));
+                if (macros[macroCount] == NULL)
+                {
+                    exit_with_error(EXIT_FAILURE, "Failed to allocate memory for macros.");
+                }
             }
             macroCount++;
             macroFound  = true;
             macros[macroCount - 1]->Name = malloc(strlen(line) - 5);
+            if (macros[macroCount - 1]->Name == NULL)
+            {
+                exit_with_error(EXIT_FAILURE, "Failed to allocate memory for macro name.");
+            }
             if (line[strlen(line) - 1] == '\n')
                 strncpy(macros[macroCount - 1]->Name, line + 5, strlen(line) - 6);
             else
@@ -98,11 +126,20 @@ void preProcessFile(char* inputFile) /*processing the initial input file.*/
             }
             else
             {
-                if (i == 0)
+                if (i == 0){
                     macros[macroCount - 1]->Body = malloc(sizeof(char*) );
+                    if (macros[macroCount - 1]->Body == NULL)
+                    {
+                        exit_with_error(EXIT_FAILURE, "Failed to allocate memory for macro body.");
+                    }
+                }
                 else
                     macros[macroCount - 1]->Body = realloc(macros[macroCount - 1]->Body, (i+1) * sizeof(char*) );
                 macros[macroCount - 1]->Body[i] = malloc(strlen(line));
+                if (macros[macroCount - 1]->Body[i] == NULL)
+                {
+                    exit_with_error(EXIT_FAILURE, "Failed to allocate memory for macro body.");
+                }
                 strncpy( macros[macroCount - 1]->Body[i], line, strlen(line));
                 macros[macroCount - 1]->LineCount +=1;
                 i++;
@@ -130,11 +167,13 @@ void preProcessFile(char* inputFile) /*processing the initial input file.*/
             {
                 logger(ERROR, "Error: Macro name conflicts with label name.\n");
                 errorCount++;
+                break;
             }
             if(isOperation(macros[i]->Name))
             {
                 logger(ERROR, "Error: Macro name conflicts with operation name.\n");
                 errorCount++;
+                break;
             }
         }
     }

@@ -72,6 +72,9 @@ char** split_string(const char* str, const char delimiter, int* count) {
     if (tokens == NULL) {
         exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
     }
+    if (tokens == NULL) {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
+    }
 
     /* Allocate memory and copy each token */
 
@@ -113,6 +116,10 @@ char* getLabel(char* line) /*gets the label from the line.*/
 {
     int colonPos = findFirstSign(line,':');
     char* label = malloc(colonPos - 1);
+    if (label == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
+    }
     strncpy(label, line, colonPos - 1);
     return label;
 }
@@ -159,6 +166,10 @@ void breakLine(char* line, char** label, char** operation, char** datatype, char
     int offset = 0;
     if (isLabel(splitted[0])){
         *label = malloc(32);/* change allocation size in future.*/
+        if (*label == NULL)
+        {
+            exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
+        }
         strcpy(*label, splitted[0]);
         offset+=strlen(splitted[0]);
         i++;
@@ -168,17 +179,29 @@ void breakLine(char* line, char** label, char** operation, char** datatype, char
         if (isDataType(splitted[i]))
         {
             *datatype = malloc(32); /* change allocation size in future.*/
+            if (*datatype == NULL)
+            {
+                exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
+            }
             strcpy(*datatype, splitted[i]);
             offset+=strlen(splitted[i]);
         }
         else
         {
             *operation = malloc(32); /* change allocation size in future.*/
+            if (*operation == NULL)
+            {
+                exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
+            }
             strcpy(*operation, splitted[i]);
             offset+=strlen(splitted[i]);
         }
         i++;
     }
     *args = malloc(strlen(line) - offset);
+    if (*args == NULL)
+    {
+        exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
+    }
     strncpy(*args, &line[offset+1], strlen(line) - offset); /*make sure that if data is string, return without quotes.*/
 }

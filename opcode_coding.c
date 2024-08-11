@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include "errors_handler.h"
 #include "string_helper.h"
 #include "opcode_coding.h"
 #include "first_pass.h"
@@ -137,12 +138,20 @@ void split_args(const char* args, char** argOne, char** argTwo) /*splits the arg
     if (count == 1) /*if there is one argument*/
     {
         *argOne = malloc(strlen(splitted[0]));
+        if (argOne == NULL)
+        {
+            exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
+        }
         strcpy(*argOne, trimWhiteSpace(splitted[0]));
     }
     else if (count == 2) /*if there are two arguments*/
     {
         *argOne = malloc(strlen(splitted[0]));
         *argTwo = malloc(strlen(splitted[1]));
+        if (argOne == NULL || argTwo == NULL)
+        {
+            exit_with_error(EXIT_FAILURE, "Failed to allocate memory");
+        }
         strcpy(*argOne, trimWhiteSpace(splitted[0]));
         strcpy(*argTwo, trimWhiteSpace(splitted[1]));
     }
