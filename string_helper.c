@@ -205,3 +205,13 @@ void breakLine(char* line, char** label, char** operation, char** datatype, char
     }
     strncpy(*args, &line[offset+1], strlen(line) - offset); /*make sure that if data is string, return without quotes.*/
 }
+char *strdup(const char *str)
+{
+    int n = strlen(str) + 1;
+    char *dup = malloc(n);
+    if(dup)
+    {
+        strcpy(dup, str);
+    }
+    return dup;
+}

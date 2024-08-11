@@ -4,6 +4,7 @@
 #include "logger.h"
 #include "errors_handler.h"
 #include "code_segment.h"
+#include "string_helper.h"
 code_segment** codeSegment = NULL;
 
 int IC = 0;
